@@ -1,3 +1,12 @@
+/**
+ * 马来西亚 OSINT 半自动查询器
+ * 这是一个用于查询可疑电话号码和银行账号的 HTTP 服务器
+ * 通过调用马来西亚皇家警察(PDRM)的 API 来验证目标是否涉及诈骗活动
+ * 
+ * @brief 马来西亚 OSINT 半自动查询器
+ * @author 钟智强
+ * @date 2023-12-15
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,11 +18,31 @@
 
 #define PORT 8080
 
+/**
+ * 从 HTTP 请求中获取指定参数的值
+ * @param conn MHD_Connection 连接对象
+ * @param key 参数名
+ * @return 参数值的副本(需要手动释放)，如果参数不存在返回 NULL
+ */
 static char *get_param(struct MHD_Connection *conn, const char *key) {
     const char *val = MHD_lookup_connection_value(conn, MHD_GET_ARGUMENT_KIND, key);
     return val ? strdup(val) : NULL;
 }
 
+/**
+ * HTTP 请求处理函数
+ * 处理所有进入的 HTTP 请求，目前只支持 GET 方法
+ * 主要功能是接收查询参数并调用 PDRM API 进行查询
+ * @param cls 未使用
+ * @param connection MHD_Connection 连接对象
+ * @param url 请求 URL
+ * @param method 请求方法
+ * @param version HTTP 版本
+ * @param upload_data 上传数据(未使用)
+ * @param upload_data_size 上传数据大小(未使用)
+ * @param con_cls 未使用
+ * @return MHD_Result 处理结果
+ */
 static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connection,
                                       const char *url,
                                       const char *method,
@@ -118,6 +147,11 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
 }
 
 
+/**
+ * 主函数
+ * 启动 HTTP 服务器并显示欢迎信息
+ * 按 q 键可以优雅地关闭服务器
+ */
 int main(int argc, char **argv) {
     int ch;
     struct MHD_Daemon *daemon;
