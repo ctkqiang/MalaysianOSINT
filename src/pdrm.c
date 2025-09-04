@@ -64,28 +64,34 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdat
 }
 
 int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule_response *resp) {
+    if (!url || !json_payload || !resp) return -1;
+
     CURL *curl;
     CURLcode res;
+    
+    char api_key[128];
 
-    char api_key[100];
+    if (snprintf(api_key, sizeof(api_key), "apikey: %s", PUBLIC_KEY) >= (int)sizeof(api_key)) {
+        fprintf(stderr, "[ERR] api_key truncated!\n");
+        return -1;
+    }
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
+
     curl = curl_easy_init();
-
-    struct curl_slist *headers = NULL;
-    snprintf(api_key, "apikey: %s", PUBLIC_KEY);
-
-    if (!url || !json_payload || !resp) return -1;
     
+    if (!curl) return -1;
+
     resp -> data = malloc(1);
     resp -> size = 0;
 
-    if (!(resp -> data)) return -1;
-
-    if (!(curl)) {
-        free(resp -> data);
+    if (!resp->data) {
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
         return -1;
     }
+
+    struct curl_slist *headers = NULL;
 
     headers = curl_slist_append(headers, "Accept: */*");
     headers = curl_slist_append(headers, "Accept-Language: zh-CN,zh;q=0.9");
@@ -98,14 +104,14 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
     headers = curl_slist_append(headers, "sec-ch-ua: \"Chromium\";v=\"123\", \"Not:A-Brand\";v=\"8\"");
     headers = curl_slist_append(headers, "sec-ch-ua-mobile: ?0");
     headers = curl_slist_append(headers, "sec-ch-ua-platform: \"macOS\"");
-    headers = curl_slist_append(headers, "Cookie: *");
+    headers = curl_slist_append(headers, "Cookie: ");
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload);
 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) resp);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)resp);
 
     res = curl_easy_perform(curl);
 
@@ -115,6 +121,7 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
 
     return (res == CURLE_OK) ? 0 : -1;
 }
+
 
 /**
  * 释放semak_mule_response结构体中的数据内存
@@ -126,9 +133,10 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
  */
 void pdrm_semak_mule_response_free(struct semak_mule_response *resp) {
     // 检查响应结构体及其数据指针是否有效 
-    if (resp && resp->data) {
+    if (resp && resp -> data) {
+        
         // 释放数据内存 
-        free(resp->data);
+        free(resp -> data);
 
         // 重置数据指针和大小字段 
         resp -> data = NULL;
