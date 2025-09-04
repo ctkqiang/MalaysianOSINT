@@ -4,6 +4,9 @@
 #include <string.h>
 #include <curl/curl.h>
 
+#define ORIGIN "https://semakmule.rmp.gov.my/"
+#define PUBLIC_KEY "j3j389#nklala2"  
+
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdata) {
     size_t total = size * nmemb;
     struct semak_mule_response *resp = (struct semak_mule_response *)userdata;
@@ -29,11 +32,14 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
     CURL *curl;
     CURLcode res;
 
+    char api_key[100];
+
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
 
     struct curl_slist *headers = NULL;
-    
+    snprintf(api_key, "apikey: %s", PUBLIC_KEY);
+
     if (!url || !json_payload || !resp) return -1;
     
     resp -> data = malloc(1);
@@ -53,7 +59,7 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
     headers = curl_slist_append(headers, "Origin: https://semakmule.rmp.gov.my");
     headers = curl_slist_append(headers, "Referer: https://semakmule.rmp.gov.my/");
     headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 QQBrowser/19.5.5.207");
-    headers = curl_slist_append(headers, "apikey: j3j389#nklala2");
+    headers = curl_slist_append(headers, api_key);
     headers = curl_slist_append(headers, "sec-ch-ua: \"Chromium\";v=\"123\", \"Not:A-Brand\";v=\"8\"");
     headers = curl_slist_append(headers, "sec-ch-ua-mobile: ?0");
     headers = curl_slist_append(headers, "sec-ch-ua-platform: \"macOS\"");
@@ -73,4 +79,13 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
     curl_global_cleanup();
 
     return (res == CURLE_OK) ? 0 : -1;
+}
+
+void pdrm_semak_mule_response_free(struct semak_mule_response *resp) {
+    if (resp && resp->data) {
+        free(resp->data);
+
+        resp -> data = NULL;
+        resp -> size = 0;
+    }
 }

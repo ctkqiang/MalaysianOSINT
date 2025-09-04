@@ -4,6 +4,23 @@
         "pdrm.h": "c",
         "queue": "c",
         "stack": "c",
-        "ios": "c"
+        "ios": "c",
+        "atomic": "c",
+        "version": "c",
+        "__hash_table": "c",
+        "algorithm": "c",
+        "complex": "c",
+        "cmath": "c",
+        "__config": "c",
+        "__split_buffer": "c",
+        "deque": "c",
+        "functional": "c",
+        "locale": "c",
+        "memory": "c",
+        "print": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "type_traits": "c"
     }
 }
