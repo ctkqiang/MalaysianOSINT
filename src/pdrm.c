@@ -1,3 +1,18 @@
+/**
+ * @file pdrm.c
+ * @brief 马来西亚皇家警察（PDRM）Semak Mule API客户端实现
+ * 
+ * 本模块提供与马来西亚皇家警察（PDRM）Semak Mule（"检查钱驴"）API交互的C接口，
+ * 该API是国家金融欺诈预防系统的一部分，专门针对钱驴（money mule）活动。
+ * 
+ * 钱驴系统主要用于检测和防止利用银行账户进行非法资金转移的犯罪行为，
+ * 通常涉及诈骗集团利用他人账户洗钱。金融机构和商家可通过此API验证
+ * 交易是否存在钱驴风险。
+ * 
+ * 本模块实现了与PDRM Semak Mule API的交互，包括发送HTTP请求、
+ * 处理响应数据和错误处理。
+ * 
+ */
 #include "../include/pdrm.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,12 +20,31 @@
 #include <curl/curl.h>
 
 #define ORIGIN "https://semakmule.rmp.gov.my/"
+
+/**
+* 警告：这儿为了图省事直接把密钥写死了，正式项目别学！
+* 线上环境一定要从配置或环境变量读取，不然分分钟被黑
+* 
+* 话说PDRM SemakMule虽然用的是公钥验证
+* 但这么设计确实有点让人看不懂，可能他们有别的考虑吧
+*/
 #define PUBLIC_KEY "j3j389#nklala2"  
 
+/**
+ * CURL写回调函数，用于接收HTTP响应数据并存储到用户定义的结构体中
+ * 
+ * @param ptr 指向接收到的数据的指针
+ * @param size 每个数据元素的大小（字节数）
+ * @param nmemb 数据元素的数量
+ * @param userdata 指向用户数据的指针，这里应该是semak_mule_response结构体
+ * 
+ * @return 返回实际处理的数据大小（字节数），如果处理失败返回0
+ */
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdata) {
     size_t total = size * nmemb;
     struct semak_mule_response *resp = (struct semak_mule_response *)userdata;
 
+    // 重新分配内存以容纳新接收的数据
     char *new_data = realloc(resp -> data, resp -> size + total + 1);
 
     if (!new_data) {
@@ -20,6 +54,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdat
 
     resp -> data = new_data;
 
+    // 将新数据复制到已分配的内存空间中
     memcpy(&(resp -> data[resp -> size]), ptr, total);
     
     resp -> size += total;
@@ -81,10 +116,21 @@ int pdrm_semak_mule(const char *url, const char *json_payload, struct semak_mule
     return (res == CURLE_OK) ? 0 : -1;
 }
 
+/**
+ * 释放semak_mule_response结构体中的数据内存
+ * 
+ * 该函数用于安全地释放semak_mule_response结构体中动态分配的数据内存，
+ * 并将相关字段重置为初始状态。
+ * 
+ * @param resp 指向semak_mule_response结构体的指针
+ */
 void pdrm_semak_mule_response_free(struct semak_mule_response *resp) {
+    // 检查响应结构体及其数据指针是否有效 
     if (resp && resp->data) {
+        // 释放数据内存 
         free(resp->data);
 
+        // 重置数据指针和大小字段 
         resp -> data = NULL;
         resp -> size = 0;
     }
