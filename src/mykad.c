@@ -51,24 +51,24 @@ char* mykad_get_birth_province(const char *ic_no) {
     char *province = malloc(32);
     if (!province) return strdup("Memory error");
 
-    strcpy(province, "未知州属");
+    sstrcpy(province, "Unknown State");
 
-    if (strcmp(province_code, "01") == 0) strcpy(province, "柔佛州");
-    if (strcmp(province_code, "02") == 0) strcpy(province, "吉打州");
-    if (strcmp(province_code, "03") == 0) strcpy(province, "吉兰丹州");
-    if (strcmp(province_code, "04") == 0) strcpy(province, "马六甲州");
-    if (strcmp(province_code, "05") == 0) strcpy(province, "森美兰州");
-    if (strcmp(province_code, "06") == 0) strcpy(province, "彭亨州");
-    if (strcmp(province_code, "07") == 0) strcpy(province, "槟城州");
-    if (strcmp(province_code, "08") == 0) strcpy(province, "霹雳州");
-    if (strcmp(province_code, "09") == 0) strcpy(province, "玻璃市州");
-    if (strcmp(province_code, "10") == 0) strcpy(province, "雪兰莪州");
-    if (strcmp(province_code, "11") == 0) strcpy(province, "登嘉楼州");
-    if (strcmp(province_code, "12") == 0) strcpy(province, "沙巴州");
-    if (strcmp(province_code, "13") == 0) strcpy(province, "砂拉越州");
-    if (strcmp(province_code, "14") == 0) strcpy(province, "吉隆坡联邦直辖区");
-    if (strcmp(province_code, "15") == 0) strcpy(province, "纳闽联邦直辖区");
-    if (strcmp(province_code, "16") == 0) strcpy(province, "布城联邦直辖区");
+    if (strcmp(province_code, "01") == 0) strcpy(province, "Johor");
+    if (strcmp(province_code, "02") == 0) strcpy(province, "Kedah");
+    if (strcmp(province_code, "03") == 0) strcpy(province, "Kelantan");
+    if (strcmp(province_code, "04") == 0) strcpy(province, "Malacca");
+    if (strcmp(province_code, "05") == 0) strcpy(province, "Negeri Sembilan");
+    if (strcmp(province_code, "06") == 0) strcpy(province, "Pahang");
+    if (strcmp(province_code, "07") == 0) strcpy(province, "Penang");
+    if (strcmp(province_code, "08") == 0) strcpy(province, "Perak");
+    if (strcmp(province_code, "09") == 0) strcpy(province, "Perlis");
+    if (strcmp(province_code, "10") == 0) strcpy(province, "Selangor");
+    if (strcmp(province_code, "11") == 0) strcpy(province, "Terengganu");
+    if (strcmp(province_code, "12") == 0) strcpy(province, "Sabah");
+    if (strcmp(province_code, "13") == 0) strcpy(province, "Sarawak");
+    if (strcmp(province_code, "14") == 0) strcpy(province, "Kuala Lumpur Federal Territory");
+    if (strcmp(province_code, "15") == 0) strcpy(province, "Labuan Federal Territory");
+    if (strcmp(province_code, "16") == 0) strcpy(province, "Putrajaya Federal Territory");
 
     return province;
 }
