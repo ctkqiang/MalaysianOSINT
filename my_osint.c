@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <microhttpd.h>
 #include <cjson/cJSON.h>
 
@@ -54,13 +56,38 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
     char payload[512];
     char *search = NULL;
 
-    (void) cls; (void) url; (void) version; (void) upload_data; (void) upload_data_size; (void) con_cls;
+    (void) cls; (void) version; (void) upload_data; (void) upload_data_size; (void) con_cls;
+
+    const union MHD_ConnectionInfo *conn_info;
+    char client_ip[INET6_ADDRSTRLEN] = {0};
+
+    conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+    
+    if (conn_info && conn_info -> client_addr) {
+        struct sockaddr *sa = (struct sockaddr *) conn_info -> client_addr;
+    
+        if (sa -> sa_family == AF_INET) {
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa) -> sin_addr), client_ip, sizeof(client_ip));
+        } 
+        
+        if (sa -> sa_family == AF_INET6) {
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa) -> sin6_addr), client_ip, sizeof(client_ip));
+        } 
+            
+        snprintf(client_ip, sizeof(client_ip), "未知地址族");
+
+    } else {
+        snprintf(client_ip, sizeof(client_ip), "未知IP");
+    }
+
+    printf("[访问日志] IP: %s | 方法: %s | 路径: %s\n", client_ip, method, url);
 
     if (strcmp(method, "GET") != 0) {
         const char *msg = "Only GET supported at the moment\n";
         struct MHD_Response *response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
 
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
+
         MHD_destroy_response(response);
 
         return ret;
@@ -114,7 +141,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
             cJSON *row = cJSON_GetArrayItem(table_data, 0);
     
             if (cJSON_IsArray(row) && cJSON_GetArraySize(row) > 1) {
-                reported = cJSON_GetArrayItem(row, 1)->valueint;
+                reported = cJSON_GetArrayItem(row, 1) -> valueint;
             }
         }
 
