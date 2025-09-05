@@ -14,10 +14,18 @@
 #endif
 
 
+/**
+ * CURL写回调函数，用于接收HTTP响应数据并存储到动态分配的内存中
+ * @param contents 指向接收到的数据块的指针
+ * @param size 每个数据元素的大小（字节数）
+ * @param nmemb 数据元素的数量
+ * @param userp 指向用户自定义数据结构的指针（这里是struct memory）
+ * @return 返回实际处理的数据大小，如果失败返回0
+ */
 static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t realsize = size * nmemb;
-
     struct memory *mem = (struct memory *)userp;
+    
     char *ptr = realloc(mem -> data, mem -> size + realsize + 1);
 
     if(!ptr) return 0;
@@ -32,6 +40,11 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb, void *us
     return realsize;
 }
 
+/**
+ * 从指定URL获取HTML内容
+ * @param url 要获取HTML内容的URL地址
+ * @return 返回获取到的HTML内容字符串，需要调用者负责释放内存；如果获取失败则返回NULL
+ */
 char* rmp_fetch_wanted_html(const char* url) {
     CURL *curl;
     CURLcode res;
@@ -66,10 +79,30 @@ char* rmp_fetch_wanted_html(const char* url) {
     return chunk.data;
 }
 
+/**
+ * 释放HTML字符串的内存
+ * 
+ * @param html 指向要释放的HTML字符串的指针
+ * 
+ * 该函数用于安全地释放通过动态内存分配创建的HTML字符串。
+ * 它会检查指针是否为NULL，避免对空指针进行释放操作。
+ */
 void rmp_free_html(char* html) {
+    /* 释放HTML字符串内存 */
     if(html) free(html);
 }
 
+/**
+ * 从HTML内容中解析通缉人员列表
+ * 
+ * @param html  包含通缉人员信息的HTML字符串
+ * @param list  指向WantedPerson结构体数组的指针，用于存储解析出的通缉人员信息
+ * 
+ * @return 返回解析到的通缉人员数量
+ * 
+ * 该函数会解析HTML中所有class为"wanted-person"的div元素，
+ * 提取其中的姓名、年龄和照片URL信息，并动态分配内存存储这些信息。
+ */
 int rmp_parse_wanted_list(const char* html, WantedPerson** list) {
     int count = 0;
     *list = NULL;
@@ -119,6 +152,13 @@ int rmp_parse_wanted_list(const char* html, WantedPerson** list) {
     return count;
 }
 
+/**
+ * 处理ID请求，整合SSPI、MyKad和RMP通缉名单的查询结果，返回JSON格式的响应。
+ *
+ * @param id 身份证号码字符串，作为查询的主键。
+ * @return 返回一个动态分配的JSON字符串，包含查询结果。调用者需负责释放内存。
+ *         如果出错，返回的JSON中包含error字段。
+ */
 char* handle_id_request(const char* id) {
     struct sspi_response sspi;
     int ok = sspi_check(id, &sspi);
