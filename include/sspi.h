@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdef.h>
+#include <stddef.h>
 
 #ifndef SSPI_H
 #define SSPI_H
