@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include "memory.h"
 
 #ifndef MULE_H
 #define MULE_H

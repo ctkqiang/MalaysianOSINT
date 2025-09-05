@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "../include/mykad.h"
+#include "../include/memory.h"
 
 /**
  * 解析马来西亚身份证号码信息
@@ -51,7 +52,7 @@ char* mykad_get_birth_province(const char *ic_no) {
     char *province = malloc(32);
     if (!province) return strdup("Memory error");
 
-    sstrcpy(province, "Unknown State");
+    strcpy(province, "Unknown State");
 
     if (strcmp(province_code, "01") == 0) strcpy(province, "Johor");
     if (strcmp(province_code, "02") == 0) strcpy(province, "Kedah");

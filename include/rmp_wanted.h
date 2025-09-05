@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include "memory.h"
 
 #ifndef RMP_WANTED_H
 #define RMP_WANTED_H
@@ -9,10 +10,10 @@
 #define MAX_AGE_LEN 16
 #define MAX_PHOTO_LEN 256
 
-struct memory {
-    char *data;
-    size_t size;
-};
+#ifndef PDRM_WANTED__LIST
+#define PDRM_WANTED__LIST "https://www.rmp.gov.my/orang-dikehendaki"
+#endif
+
 
 struct wanted_person {
     char *name;
