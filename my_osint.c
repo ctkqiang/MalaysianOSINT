@@ -46,14 +46,17 @@ static char *get_param(struct MHD_Connection *conn, const char *key) {
  * @param con_cls 未使用
  * @return MHD_Result 处理结果
  */
-static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connection,
-                                    const char *url,
-                                    const char *method,
-                                    const char *version,
-                                    const char *upload_data,
-                                    size_t *upload_data_size,
-                                    void **con_cls)
-{    (void) cls; (void) url; (void) version; 
+static enum MHD_Result handle_request(
+    void *cls, 
+    struct MHD_Connection *connection,
+    const char *url,
+    const char *method,
+    const char *version,
+    const char *upload_data,
+    size_t *upload_data_size,
+    void **con_cls) {
+
+    (void) cls; (void) url; (void) version; 
     (void) upload_data; (void) upload_data_size; (void) con_cls;
 
     char client_ip[INET6_ADDRSTRLEN] = {0};
@@ -226,24 +229,32 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
 }
 
 
-
 /**
- * 主函数
- * 启动 HTTP 服务器并显示欢迎信息
- * 按 q 键可以优雅地关闭服务器
+ * 主函数：启动一个基于 libmicrohttpd 的 HTTP 服务器，用于提供 OSINT 查询服务。
+ *
+ * 参数:
+ *   argc - 命令行参数数量（未使用）
+ *   argv - 命令行参数数组（未使用）
+ *
+ * 返回值:
+ *   EXIT_SUCCESS - 服务正常退出
+ *   EXIT_FAILURE - 启动失败或发生错误
  */
 int main(int argc, char **argv) {
     int ch;
     struct MHD_Daemon *daemon;
 
+    // 启动 HTTP 服务器守护进程，监听指定端口并处理请求
     daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
 
+    // 检查服务器是否成功启动
     if (!daemon) {
         fprintf(stderr, "[错误] 无法启动 API 服务器，请检查端口 %d 是否被占用。\n", PORT);
         return EXIT_FAILURE;
     }
 
-       printf("\n============================================================\n");
+    // 打印程序信息和使用说明
+    printf("\n============================================================\n");
     printf("   马来西亚 OSINT 半自动查询器 (Malaysian OSINT)\n");
     printf("============================================================\n");
     printf(" 作者: 钟智强 <johnmelodymel@qq.com>\n");
@@ -270,6 +281,7 @@ int main(int argc, char **argv) {
     printf("   - 输入 'q' 并回车以安全关闭服务\n");
     printf("============================================================\n\n");
 
+    // 等待用户输入 'q' 或 'Q' 来安全关闭服务器
     while ((ch = getchar()) != EOF) {
         if (ch == 'q' || ch == 'Q') {
             printf("[提示] 正在关闭服务器...\n");
@@ -277,6 +289,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    // 停止 HTTP 服务器守护进程
     MHD_stop_daemon(daemon);
     printf("[完成] 服务器已停止。\n");
 
