@@ -21,6 +21,7 @@
 #include "./include/sspi.h"
 #include "./include/rmp_wanted.h"
 #include "./include/memory.h"
+#include "./include/ecourt.h"
 
 #define PORT 8080
 
@@ -93,11 +94,13 @@ static enum MHD_Result handle_request(
 
     char *q = get_param(connection, "q");
     char *id = get_param(connection, "id");
+    char *name = get_param(connection, "name");
 
-    if (!q && !id) {
+    if (!q && !id && !name) {
         const char *msg = "Missing parameter. Use either:\n"
-                          "  ?q=PHONE_OR_BANK\n"
-                          "  ?id=IC_NUMBER\n";
+                "  ?q=PHONE_OR_BANK\n"
+                "  ?id=IC_NUMBER\n"
+                "  ?name=NAME\n";
 
         struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, resp);
@@ -253,6 +256,42 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
+    if (name) {
+        char result_buf[8192]; 
+
+        EJudgmentResponse* resp = ejudgment_search(
+            name,               // search
+            "ALL",              // jurisdictionType
+            "",                 // courtCategory
+            "",                 // court
+            "",                 // judgeName
+            "",                 // caseType
+            NULL,               // dateOfAPFrom
+            NULL,               // dateOfAPTo
+            NULL,               // dateOfResultFrom
+            NULL,               // dateOfResultTo
+            1,                  // currPage
+            "DATE_OF_AP_DESC",  // ordering
+            3,                  // maxRetries
+            3000                // delayBetweenRetries
+        );
+
+        const char* json_text = resp ? resp->raw_json : "{}";
+
+        snprintf(result_buf, sizeof(result_buf), "E-Court Search Results for: %s\n%s\n", name, json_text);
+
+        struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
+            strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+        );
+
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_resp);
+        MHD_destroy_response(mhd_resp);
+
+        ejudgment_response_free(resp);
+
+        return ret;
+    }
+
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
     struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
@@ -305,10 +344,12 @@ int main(int argc, char **argv) {
     printf(" 运行地址:   http://localhost:%d\n", PORT);
     printf("------------------------------------------------------------\n");
     printf(" 可用接口 (API Endpoints):\n");
-    printf("   1. PDRM 查询 (电话/银行账号):\n");
+    printf("   1. 马来西亚警察局查询 (PDRM) 电话/银行账号:\n");
     printf("        http://localhost:%d/?q=0123456789\n", PORT);
-    printf("   2. 移民局 SSPI 查询 (身份证号码):\n");
+    printf("   2. 马来西亚移民局身份证号码查询 (SSPI):\n");
     printf("        http://localhost:%d/?id=1234567890\n", PORT);
+    printf("   3. 马来西亚法庭查询 (姓名):\n");
+    printf("        http://localhost:%d/?name=johndoe\n", PORT);
     printf("------------------------------------------------------------\n");
     printf(" 操作说明:\n");
     printf("   - 在浏览器或 curl 中访问上述接口\n");
@@ -323,7 +364,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    // 停止 HTTP 服务器守护进程
     MHD_stop_daemon(daemon);
     printf("[完成] 服务器已停止。\n");
 
