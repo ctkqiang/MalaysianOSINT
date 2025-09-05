@@ -5,7 +5,6 @@
  * 
  * @brief 马来西亚 OSINT 半自动查询器
  * @author 钟智强
- * @date 2023-12-15
  */
 #include <stdio.h>
 #include <stdlib.h>
