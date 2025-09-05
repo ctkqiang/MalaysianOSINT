@@ -35,9 +35,6 @@
 .AppleDouble
 .LSOverride
 
-# Generated HTML/JSON (optional)
-*.html
-*.json
 
 # Curl temp files
 curl-*

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malaysian OSINT - 专业情报查询系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/pure-css@3.0.0/pure-min.css">
+    <style>
+        :root {
+            --primary: #00ff00;
+            --bg: #1a1a1a;
+            --text: #e0e0e0;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .terminal {
+            width: 90%;
+            max-width: 900px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header {
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        .content {
+            opacity: 0;
+            animation: fadeIn 1s 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .ascii-art {
+            font-size: 0.7rem;
+            line-height: 1.2;
+            white-space: pre;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .command-line {
+            display: flex;
+            margin: 1rem 0;
+            align-items: center;
+        }
+
+        .prompt {
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .command {
+            position: relative;
+        }
+
+        .command::after {
+            content: '|';
+            position: absolute;
+            right: -10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .api-endpoint {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 1rem;
+            border-left: 3px solid var(--primary);
+            margin: 1rem 0;
+            transition: all 0.3s;
+        }
+
+        .api-endpoint:hover {
+            transform: translateX(10px);
+            background: rgba(0, 255, 0, 0.15);
+        }
+
+        .pure-button-primary {
+            background: var(--primary);
+            color: var(--bg);
+            transition: all 0.3s;
+        }
+
+        .pure-button-primary:hover {
+            background: #00cc00;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <div class="ascii-art">
+███╗   ███╗██╗   ██╗ ██████╗ ███████╗██╗███╗   ██╗████████╗
+████╗ ████║╚██╗ ██╔╝██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝
+██╔████╔██║ ╚████╔╝ ██║   ██║███████╗██║██╔██╗ ██║   ██║   
+██║╚██╔╝██║  ╚██╔╝  ██║   ██║╚════██║██║██║╚██╗██║   ██║   
+██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║██║██║ ╚████║   ██║   
+╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   </div>
+            <div class="command-line">
+                <span class="prompt">root@osint:~$</span>
+                <span class="command">./mo --version</span>
+            </div>
+            <div>马来西亚 OSINT 半自动查询系统 v0.1.0</div>
+        </div>
+
+        <div class="content">
+            <div class="api-endpoint">
+                <h3>🔍 PDRM Semak Mule</h3>
+                <code>curl "http://localhost:8080/?q=0123456789"</code>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>🪪 SSPI 身份查询</h3>
+                <code>curl "http://localhost:8080/?id=990101075678"</code>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>⚖️ E-Court 法庭记录</h3>
+                <code>curl "http://localhost:8080/?name=姓名"</code>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>🚨 PDRM 通缉查询</h3>
+                <code>curl "http://localhost:8080/?wanted=身份证号"</code>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="pure-button pure-button-primary" onclick="window.location.href='https://github.com/ctkqiang/MalaysianOSINT.git'">启动查询服务</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 模拟终端输入效果
+            const commands = document.querySelectorAll('.command');
+            commands.forEach(cmd => {
+                const text = cmd.textContent;
+                cmd.textContent = '';
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        cmd.textContent += text[i];
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            });
+
+            // 添加API端点的动画效果
+            const endpoints = document.querySelectorAll('.api-endpoint');
+            endpoints.forEach((endpoint, index) => {
+                endpoint.style.animation = `fadeIn 0.5s ${index * 0.2 + 1}s forwards`;
+                endpoint.style.opacity = '0';
+            });
+        });
+    </script>
+</body>
+</html>
