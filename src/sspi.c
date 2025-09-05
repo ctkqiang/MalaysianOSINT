@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include "../include/sspi.h"
+#include "../include/memory.h"
 
 #define SSPI_URL "https://sspi.imi.gov.my/sspi/index.php?page=sspi/bm"
 

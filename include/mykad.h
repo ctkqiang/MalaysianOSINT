@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
+
 #ifndef MYKAD_H
 #define MYKAD_H
 
