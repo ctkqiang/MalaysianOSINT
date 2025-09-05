@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <microhttpd.h>
@@ -18,6 +19,8 @@
 #include "./include/pdrm.h"
 #include "./include/mykad.h"
 #include "./include/sspi.h"
+#include "./include/rmp_wanted.h"
+#include "./include/memory.h"
 
 #define PORT 8080
 
@@ -105,40 +108,71 @@ static enum MHD_Result handle_request(
     }
 
     if (id) {
-        char result_buf[1024];
+        char result_buf[4096];
         struct sspi_response sspi;
 
         int ok = sspi_check(id, &sspi);
-
-        free(id);
+        char *mykad_json = mykad_check(id);
 
         if (ok != 0) {
             const char *msg = "SSPI request failed\n";
             struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
             enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_GATEWAY, resp);
+
             MHD_destroy_response(resp);
+            sspi_response_free(&sspi);
+
+            free(mykad_json);
+            free(id);
+
             return ret;
         }
 
-        char *mykad_json = mykad_check(id);
+        WantedPerson *wanted_list = NULL;
+        WantedPerson wp = {0};
+
+        char *html = rmp_fetch_wanted_html(PDRM_WANTED__LIST);
+        int wanted_count = rmp_parse_wanted_list(html, &wanted_list);
+        bool is_wanted = false;
+
+        for (int i = 0; i < wanted_count; i++) {
+
+            if (strstr(wanted_list[i].name, id)) {
+                is_wanted = true;
+                wp = wanted_list[i];
+
+                break;
+            }
+        }
+        rmp_free_html(html);
 
         snprintf(result_buf, sizeof(result_buf),
-            "IC: %s\nSSPI Status: %s\nMyKad Info: %s\n",
+            "IC: %s\nSSPI Status: %s\nMyKad Info: %s\nWanted: %s\n",
             id,
             strstr(sspi.status, "Tiada halangan") ? "Tiada Halangan" : "Halangan",
-            mykad_json
+            mykad_json ? mykad_json : "{}",
+            is_wanted ? "Yes" : "No"
         );
+
+        if (is_wanted) {
+            char wanted_details[512];
+
+            snprintf(wanted_details, sizeof(wanted_details), "Wanted Person Details:\nName: %s\nAge: %s\nPhoto: %s\n", wp.name, wp.age, wp.photo_url);
+            strncat(result_buf, wanted_details, sizeof(result_buf) - strlen(result_buf) - 1);
+        }
 
         struct MHD_Response *resp = MHD_create_response_from_buffer(
             strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
         );
-        
-        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, resp);
 
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, resp);
+        
         MHD_destroy_response(resp);
         sspi_response_free(&sspi);
-
+        
         free(mykad_json);
+        free(id);
+        free(wanted_list);
 
         return ret;
     }

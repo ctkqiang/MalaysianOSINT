@@ -13,11 +13,15 @@
  * 处理响应数据和错误处理。
  * 
  */
-#include "../include/pdrm.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+
+#include "../include/pdrm.h"
+#include "../include/memory.h"
+
 
 #define ORIGIN "https://semakmule.rmp.gov.my/"
 
