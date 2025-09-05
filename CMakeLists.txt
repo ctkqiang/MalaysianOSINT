@@ -9,6 +9,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(SOURCES
     src/pdrm.c
+    src/sspi.c
+    src/mykad.c
     my_osint.c
 )
 

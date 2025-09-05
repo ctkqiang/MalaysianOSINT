@@ -16,7 +16,8 @@
 #include <cjson/cJSON.h>
 
 #include "./include/pdrm.h"
-
+#include "./include/mykad.h"
+#include "./include/sspi.h"
 
 #define PORT 8080
 
@@ -55,6 +56,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
 {
     char payload[512];
     char *search = NULL;
+    char *sspi_status = NULL;
 
     (void) cls; (void) version; (void) upload_data; (void) upload_data_size; (void) con_cls;
 
@@ -94,9 +96,20 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
     }
 
     search = get_param(connection, "q");
+    sspi_status = get_param(connection, "id");
     
     if (!search) {
         const char *msg = "Missing parameter ?q=\n";
+        struct MHD_Response *response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
+        MHD_destroy_response(response);
+    
+        return ret;
+    }
+
+    if (!sspi_status) {
+        const char *msg = "Missing parameter ?id=\n [Malaysian Identity Card Number]";
         struct MHD_Response *response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
 
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
@@ -132,7 +145,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
     char *explain = NULL;
 
     if (root) {
-        int count = cJSON_GetObjectItem(root, "count")->valueint;
+        int count = cJSON_GetObjectItem(root, "count") -> valueint;
         cJSON *table_data = cJSON_GetObjectItem(root, "table_data");
 
         int reported = 0;
@@ -156,9 +169,42 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
                 pretty, search, count, reported);
 
         cJSON_Delete(root);
-    } else {
-        explain = strdup("Failed to parse JSON response\n");
+    } 
+        
+    if (sspi_status) {
+        struct sspi_response sspi;
+        int status = sspi_check(id, &sspi);
+
+        if (status != 0) {
+            const char *msg = "SSPI request failed\n";
+            struct MHD_Response *response = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
+        
+            enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_GATEWAY, response);
+        
+            MHD_destroy_response(response);
+        
+            free(id);
+            return ret;
+        }
+
+        // 简单检测 [Tiada Halangan]
+        const char *result = strstr(sspi.data, "Tiada halangan") ? 
+            "IC is clear: Tiada Halangan\n" : 
+            "IC may have issues or not found.\n";
+
+        struct MHD_Response *response = MHD_create_response_from_buffer(strlen(result), (void*)result, MHD_RESPMEM_PERSISTENT);
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+
+        MHD_destroy_response(response);
+        sspi_response_free(&sspi);
+        
+        free(id);
+        free(search); 
+
+        return ret;
     }
+    
+    explain = strdup("Failed to parse JSON response\n");
 
     struct MHD_Response *response = MHD_create_response_from_buffer(strlen(explain), (void *)explain, MHD_RESPMEM_MUST_FREE);
     enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
