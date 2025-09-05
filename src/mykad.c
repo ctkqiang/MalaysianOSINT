@@ -9,33 +9,31 @@
  *         如果输入无效或内存分配失败，返回错误信息JSON字符串
  */
 char* mykad_check(const char *ic_no) {
-    // 验证输入参数有效性
-    if (ic_no == NULL || strlen(ic_no) < 12) return "{\"error\": \"Invalid IC number\"}";
+    if (!ic_no || strlen(ic_no) < 12) return strdup("{\"error\": \"Invalid IC number\"}");
 
-    // 从身份证号码中提取各个字段信息
     char birth_year[] = { ic_no[0], ic_no[1], '\0' };
     char birth_month[] = { ic_no[2], ic_no[3], '\0' };
     char birth_day[] = { ic_no[4], ic_no[5], '\0' };
-    char birth_province_code[] = { ic_no[6], ic_no[7], '\0' };
     char identifier[] = { ic_no[8], ic_no[9], ic_no[10], ic_no[11], '\0' };
 
-    // 获取出生省份名称并构造生日字符串
     char* province_name = mykad_get_birth_province(ic_no);
     char birthday[11];
-
+    
     snprintf(birthday, sizeof(birthday), "19%s-%s-%s", birth_year, birth_month, birth_day);
 
-    // 构造并返回JSON格式的结果
-    char* result = malloc(200);
-    if (result == NULL) {
+    char* result = malloc(256);
+
+    if (!result) {
         free(province_name);
-        return "{\"error\": \"Memory allocation failed\"}";
+        return strdup("{\"error\": \"Memory allocation failed\"}");
     }
 
-    snprintf(result, 200,  "{\"birthday\": \"%s\", \"province\": \"%s\", \"identifier\": \"%s\"}", birthday, province_name, identifier);
+    snprintf(result, 256,
+             "{\"birthday\": \"%s\", \"province\": \"%s\", \"identifier\": \"%s\"}",
+             birthday, province_name, identifier);
 
     free(province_name);
-
+    
     return result;
 }
 
@@ -46,21 +44,15 @@ char* mykad_check(const char *ic_no) {
  * @return 返回指向省份名称的字符串指针。若身份证号码无效或内存分配失败，
  *         则返回错误提示字符串；否则返回动态分配的省份名称字符串，调用者需负责释放内存。
  */
-char* mykad_get_borth_province(char* birth_provinc[]) {
-    if (ic_no == NULL || strlen(ic_no) < 8)  return "Invalid";
+char* mykad_get_birth_province(const char *ic_no) {
+    if (ic_no == NULL || strlen(ic_no) < 8)  return strdup("Invalid");
 
-    // 提取身份证号码中表示省份的两位代码
     char province_code[] = { ic_no[6], ic_no[7], '\0' };
-    
-    // 分配用于存储省份名称的内存空间
-    char* province = malloc(20);
+    char *province = malloc(32);
+    if (!province) return strdup("Memory error");
 
-    if (province == NULL) return "Memory error";
-    
-    // 默认设置为未知州属，适用于无匹配情况（可能为非马来西亚国民）
     strcpy(province, "未知州属");
 
-    // 根据省份代码匹配并设置对应的省份名称
     if (strcmp(province_code, "01") == 0) strcpy(province, "柔佛州");
     if (strcmp(province_code, "02") == 0) strcpy(province, "吉打州");
     if (strcmp(province_code, "03") == 0) strcpy(province, "吉兰丹州");

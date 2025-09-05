@@ -102,30 +102,40 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connecti
     }
 
     if (id) {
+        char result_buf[1024];
         struct sspi_response sspi;
+
         int ok = sspi_check(id, &sspi);
-        
+
         free(id);
 
         if (ok != 0) {
             const char *msg = "SSPI request failed\n";
             struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
             enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_GATEWAY, resp);
-            
             MHD_destroy_response(resp);
-
             return ret;
         }
 
-        const char *result = strstr(sspi.status, "Tiada halangan")
-                                 ? "IC is clear: Tiada Halangan\n"
-                                 : "IC may have issues or not found.\n";
+        char *mykad_json = mykad_check(id);
 
-        struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(result), (void*)result, MHD_RESPMEM_PERSISTENT);
-        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, resp);
+        snprintf(result_buf, sizeof(result_buf),
+            "IC: %s\nSSPI Status: %s\nMyKad Info: %s\n",
+            id,
+            strstr(sspi.status, "Tiada halangan") ? "Tiada Halangan" : "Halangan",
+            mykad_json
+        );
+
+        struct MHD_Response *resp = MHD_create_response_from_buffer(
+            strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+        );
         
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, resp);
+
         MHD_destroy_response(resp);
         sspi_response_free(&sspi);
+
+        free(mykad_json);
 
         return ret;
     }
