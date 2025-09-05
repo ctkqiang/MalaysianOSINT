@@ -1,0 +1,46 @@
+# Build directories
+/build/
+/bin/
+/obj/
+/out/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/*.cmake
+
+# Temporary files
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.dylib
+*.exe
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+*.user
+*.log
+
+# Backup files
+*~
+*.bak
+
+# MacOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Generated HTML/JSON (optional)
+*.html
+*.json
+
+# Curl temp files
+curl-*
+
+# Misc
+*.tmp
