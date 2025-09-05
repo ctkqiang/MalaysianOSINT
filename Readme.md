@@ -181,7 +181,7 @@ curl "http://localhost:8080/?q=0123456789"
 ### 查询身份证 (SSPI)
 
 ```bash
-curl "http://localhost:8080/?id=REMOVED_SENSITIVE_DATA"
+curl "http://localhost:8080/?id=IC_NUUMBER"
 ```
 
 返回示例：
@@ -193,7 +193,7 @@ IC is clear: Tiada Halangan
 ### 查询法庭记录 (E-Court)
 
 ```bash
-curl "http://localhost:8080/?name=张三"
+curl "http://localhost:8080/?name=JOHN_DOE"
 ```
 
 返回示例：
@@ -215,7 +215,7 @@ curl "http://localhost:8080/?name=张三"
 ### 通缉名单核查 (PDRM Wanted List)
 
 ```bash
-curl "http://localhost:8080/?wanted=REMOVED_SENSITIVE_DATA"
+curl "http://localhost:8080/?wanted=IC_NUUMBER"
 ```
 
 返回示例：
