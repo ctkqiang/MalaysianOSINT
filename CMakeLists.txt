@@ -12,6 +12,7 @@ set(SOURCES
     src/sspi.c
     src/mykad.c
     src/rmp_wanted.c
+    src/ecourt.c
     my_osint.c
 )
 
