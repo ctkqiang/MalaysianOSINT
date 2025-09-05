@@ -82,6 +82,10 @@ make
 ```bash
 ./mo
 ```
+或
+```bash
+make run 
+```  
 
 ---
 
