@@ -8,4 +8,5 @@
 #define MYKAD_H
 
 char* mykad_check(const char *ic_no);
+
 #endif
