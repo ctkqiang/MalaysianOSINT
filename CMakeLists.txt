@@ -11,6 +11,7 @@ set(SOURCES
     src/pdrm.c
     src/sspi.c
     src/mykad.c
+    src/rmp_wanted.c
     my_osint.c
 )
 
