@@ -38,6 +38,7 @@ set(SOURCES
     src/ecourt.c
     src/ssm.c
     src/sprm.c
+    src/company.c
     my_osint.c
 )
 
