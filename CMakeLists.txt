@@ -37,6 +37,7 @@ set(SOURCES
     src/rmp_wanted.c
     src/ecourt.c
     src/ssm.c
+    src/sprm.c
     my_osint.c
 )
 

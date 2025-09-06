@@ -18,6 +18,7 @@
 #include "./include/pdrm.h"
 #include "./include/mykad.h"
 #include "./include/sspi.h"
+#include "./include/sprm.h"
 #include "./include/ssm.h"
 #include "./include/rmp_wanted.h"
 #include "./include/memory.h"
@@ -112,9 +113,10 @@ static enum MHD_Result handle_request(
     }
 
     if (id) {
-        char result_buf[4096];
+        char result_buf[8192];
         struct sspi_response sspi;
 
+        // 在这里，咱们先做 SSPI 检查吧？
         int ok = sspi_check(id, &sspi);
         char *mykad_json = mykad_check(id);
 
@@ -132,37 +134,82 @@ static enum MHD_Result handle_request(
             return ret;
         }
 
+        // 马来西亚皇家警察局通缉名单 (PDRM Wanted)
         WantedPerson *wanted_list = NULL;
         WantedPerson wp = {0};
 
         char *html = rmp_fetch_wanted_html(PDRM_WANTED__LIST);
         int wanted_count = rmp_parse_wanted_list(html, &wanted_list);
+
         bool is_wanted = false;
 
         for (int i = 0; i < wanted_count; i++) {
-
+        
             if (strstr(wanted_list[i].name, id)) {
                 is_wanted = true;
                 wp = wanted_list[i];
-
+        
                 break;
             }
         }
+        
         rmp_free_html(html);
 
+        // SPRM (马来西亚反贪会) 腐败罪犯名单
+        char *sprm_html = sprm_fetch_html(SPRM_URL);
+        PesalahList sprm_list = {0};
+        PesalahList sprm_found = {0};
+
+        bool is_pesalah = false;
+
+        if (sprm_html) {
+            sprm_list = sprm_parse_html(sprm_html);
+            free(sprm_html);
+
+            sprm_found = sprm_search(&sprm_list, id);
+
+            if (sprm_found.count > 0) is_pesalah = true;
+        }
+
         snprintf(result_buf, sizeof(result_buf),
-            "IC: %s\nSSPI Status: %s\nMyKad Info: %s\nWanted: %s\n",
+            "IC: %s\nSSPI Status: %s\nMyKad Info: %s\nWanted: %s\nSPRM Pesalah: %s\n",
             id,
             strstr(sspi.status, "Tiada halangan") ? "Tiada Halangan" : "Halangan",
             mykad_json ? mykad_json : "{}",
-            is_wanted ? "Yes" : "No"
+            is_wanted ? "Yes" : "No",
+            is_pesalah ? "Yes" : "No"
         );
 
+        // 如果.....如果.....如果是通缉犯，追加详细信息
         if (is_wanted) {
             char wanted_details[512];
+            
+            snprintf(wanted_details, sizeof(wanted_details),
+                "Wanted Person Details:\nName: %s\nAge: %s\nPhoto: %s\n",
+                wp.name, wp.age, wp.photo_url
+            );
 
-            snprintf(wanted_details, sizeof(wanted_details), "Wanted Person Details:\nName: %s\nAge: %s\nPhoto: %s\n", wp.name, wp.age, wp.photo_url);
             strncat(result_buf, wanted_details, sizeof(result_buf) - strlen(result_buf) - 1);
+        }
+
+        // 如果是贪污罪犯，追加详细信息.....
+        if (is_pesalah) {
+            for (size_t i = 0; i < sprm_found.count; i++) {
+                char sprm_details[1024];
+                
+                snprintf(sprm_details, sizeof(sprm_details),
+                    "SPRM Pesalah Details:\nName: %s\nIC: %s\nEmployer: %s\nPosition: %s\nCase: %s\nLaw: %s\nSentence: %s\n\n",
+                    sprm_found.list[i].name,
+                    sprm_found.list[i].ic,
+                    sprm_found.list[i].employer,
+                    sprm_found.list[i].position,
+                    sprm_found.list[i].case_no,
+                    sprm_found.list[i].law,
+                    sprm_found.list[i].sentence
+                );
+                
+                strncat(result_buf, sprm_details, sizeof(result_buf) - strlen(result_buf) - 1);
+            }
         }
 
         struct MHD_Response *resp = MHD_create_response_from_buffer(
@@ -170,13 +217,16 @@ static enum MHD_Result handle_request(
         );
 
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, resp);
-        
+
         MHD_destroy_response(resp);
         sspi_response_free(&sspi);
-        
+
         free(mykad_json);
         free(id);
         free(wanted_list);
+
+        if (sprm_list.count > 0) sprm_free_list(&sprm_list);
+        if (sprm_found.count > 0) sprm_free_list(&sprm_found);
 
         return ret;
     }

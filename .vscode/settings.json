@@ -22,6 +22,7 @@
         "unordered_map": "c",
         "vector": "c",
         "type_traits": "c",
+        "__locale": "c",
         "__bit_reference": "cpp",
         "array": "cpp",
         "initializer_list": "cpp",
@@ -30,8 +31,22 @@
         "tuple": "c",
         "variant": "c",
         "sstream": "c",
-        "__locale": "c",
-        "ssm.h": "c"
+        "ssm.h": "c",
+        "bit": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "iterator": "cpp",
+        "format": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "typeinfo": "cpp",
+        "curl.h": "c",
+        "stdlib.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
