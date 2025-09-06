@@ -22,7 +22,16 @@
         "unordered_map": "c",
         "vector": "c",
         "type_traits": "c",
-        "__locale": "c"
+        "__bit_reference": "cpp",
+        "array": "cpp",
+        "initializer_list": "cpp",
+        "string_view": "cpp",
+        "*.gitignore": "c",
+        "tuple": "c",
+        "variant": "c",
+        "sstream": "c",
+        "__locale": "c",
+        "ssm.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
