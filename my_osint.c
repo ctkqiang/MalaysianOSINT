@@ -62,6 +62,11 @@ static enum MHD_Result handle_request(
     (void) cls; (void) url; (void) version; 
     (void) upload_data; (void) upload_data_size; (void) con_cls;
 
+    char *q = get_param(connection, "q");
+    char *id = get_param(connection, "id");
+    char *name = get_param(connection, "name");
+    char *ssm = get_param(connection, "ssm");
+
     char client_ip[INET6_ADDRSTRLEN] = {0};
     const union MHD_ConnectionInfo *conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
@@ -90,10 +95,6 @@ static enum MHD_Result handle_request(
         MHD_destroy_response(resp);
         return ret;
     }
-
-    char *q = get_param(connection, "q");
-    char *id = get_param(connection, "id");
-    char *name = get_param(connection, "name");
 
     if (!q && !id && !name) {
         const char *msg = "Missing parameter. Use either:\n"
@@ -291,6 +292,53 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
+    if (ssm) {
+        char result_buf[8192];
+
+        char *formatted = get_ssm_format(ssm);
+
+        if (!formatted) {
+            snprintf(result_buf, sizeof(result_buf), "Invalid SSM number: %s\n", ssm);
+
+            struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
+                strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+            );
+            enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, mhd_resp);
+        
+            MHD_destroy_response(mhd_resp);
+        
+            return ret;
+        }
+
+        char *entity_desc = ssm_get_entity_code(formatted);
+
+        snprintf(
+            result_buf, sizeof(result_buf),
+            "SSM Search Results for: %s\n"
+            "{\n"
+            "  \"ssm_number\": \"%s\",\n"
+            "  \"entity_type\": \"%s\"\n"
+            "}\n",
+            ssm,
+            formatted,
+            entity_desc ? entity_desc : "Unknown"
+        );
+
+        struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
+            strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+        );
+
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_resp);
+
+        MHD_destroy_response(mhd_resp);
+
+        free(formatted);
+
+        if (entity_desc) free(entity_desc);
+
+        return ret;
+    }
+
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
     struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
@@ -362,6 +410,9 @@ int main(int argc, char **argv) {
     printf("--------------------------------------------------\n");
     printf("4. 马来西亚皇家警察(PDRM)通缉名单核查 (PDRM Wanted List)\n");
     printf("   http://localhost:%d/?wanted=身份证号\n", PORT);
+    printf("--------------------------------------------------\n");
+    printf("5. 马来西亚公司注册资料查询 (SSM)\n");
+    printf("   http://localhost:%d/?ssm=202001012345\n", PORT);
     printf("==================================================\n");
     printf("⌨️  操作指令:\n");
     printf("   q → 安全关闭    r → 重新加载\n");
