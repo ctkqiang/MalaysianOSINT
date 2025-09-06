@@ -1,0 +1,43 @@
+@startuml
+title Malaysian OSINT Query System - Flow Diagram
+
+start
+
+:启动 HTTP 服务器;
+
+while (等待请求) is (true)
+  :接收 HTTP GET 请求;
+  
+  if (请求参数?) then (q)
+    :查询 PDRM Semak Mule;
+    :解析 JSON 响应;
+    :返回查询结果;
+  elseif (id) then
+    :SSPI 身份验证;
+    :MyKad 信息查询;
+    :PDRM 通缉名单核查;
+    :SPRM 腐败罪犯核查;
+    :整合所有结果;
+    :返回查询结果;
+  elseif (name) then
+    :E-Court 法庭记录查询;
+    :格式化 JSON 响应;
+    :返回查询结果;
+  elseif (ssm) then
+    :验证 SSM 号码格式;
+    :获取实体类型;
+    :返回查询结果;
+  else (无效)
+    :返回 400 错误;
+  endif
+  
+  if (收到关闭指令?) then (yes)
+    break
+  endif
+endwhile
+
+:停止服务器;
+
+stop
+
+@enduml

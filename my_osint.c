@@ -1,11 +1,26 @@
 /**
- * 马来西亚 OSINT 半自动查询器
- * 这是一个用于查询可疑电话号码和银行账号的 HTTP 服务器
- * 通过调用马来西亚皇家警察(PDRM)的 API 来验证目标是否涉及诈骗活动
- * 
- * @brief 马来西亚 OSINT 半自动查询器
- * @author 钟智强
+ * @brief 马来西亚 OSINT 半自动查询器 (Malaysian OSINT Semi-Automated Query Tool)
+ *
+ * 这是一个基于 HTTP 的轻量级服务器，用于辅助查询潜在的诈骗目标信息。
+ * 目前支持对 **可疑电话号码** 和 **银行账号** 进行检索，
+ * 并通过调用 **马来西亚皇家警察 (PDRM) 官方 API** 验证目标是否涉及诈骗活动。
+ *
+ * 功能特点:
+ * - 提供 RESTful 风格接口，支持 JSON 输入输出
+ * - 查询结果基于官方数据源，确保数据可靠性
+ * - 可扩展性设计，后续可支持更多数据源 (eCourt、RMP Wanted 等)
+ *
+ * 使用场景:
+ * - 安全研究 / 网络威胁情报 (OSINT)
+ * - 风险验证 / 金融风控
+ * - 学术研究 / 公益用途
+ *
+ * ⚠️ 本工具仅供教育、研究与安全用途，请勿用于非法活动。
+ *
+ * @author  钟智强
+ * @version v0.1.1
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +35,7 @@
 #include "./include/sspi.h"
 #include "./include/sprm.h"
 #include "./include/ssm.h"
+#include "./include/company.h"
 #include "./include/rmp_wanted.h"
 #include "./include/memory.h"
 #include "./include/ecourt.h"
@@ -68,6 +84,7 @@ static enum MHD_Result handle_request(
     char *id = get_param(connection, "id");
     char *name = get_param(connection, "name");
     char *ssm = get_param(connection, "ssm");
+    char *comp = get_param(connection, "comp");
 
     char client_ip[INET6_ADDRSTRLEN] = {0};
     const union MHD_ConnectionInfo *conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
@@ -98,11 +115,15 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
-    if (!q && !id && !name) {
+    if (!q && !id && !name && !comp) {
         const char *msg = "Missing parameter. Use either:\n"
-                "  ?q=PHONE_OR_BANK\n"
-                "  ?id=IC_NUMBER\n"
-                "  ?name=NAME\n";
+                    "  ?q=PHONE_OR_BANK\n"
+                    "  ?id=IC_NUMBER\n"
+                    "  ?name=NAME\n"
+                    "  ?ssm=SSM_NUMBER\n"
+                    "  ?wanted=IC_NUMBER\n"
+                    "  ?comp=COMPANY_NAME\n";
+
 
         struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, resp);
@@ -390,6 +411,65 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
+    if (comp) {
+        char result_buf[8192];
+
+        struct company_entry *companies = NULL;
+        
+        size_t offset = 0;
+        size_t company_count = 0;
+
+        int ok = company_search(comp, &companies, &company_count);
+
+        if (ok != 0 || company_count == 0) {
+            snprintf(result_buf, sizeof(result_buf), "Company search failed or no results for: %s\n", comp);
+
+            struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
+                strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+            );
+            enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, mhd_resp);
+
+            MHD_destroy_response(mhd_resp);
+
+            if (companies) company_free_results(companies, company_count);
+            return ret;
+        }
+
+        offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "Company Search Results for: %s\n[\n", comp);
+
+        for (size_t i = 0; i < company_count; i++) {
+            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset,
+                "  {\n"
+                "    \"name\": \"%s\",\n"
+                "    \"category\": \"%s\",\n"
+                "    \"address\": \"%s\",\n"
+                "    \"website\": \"%s\",\n"
+                "    \"source\": \"%s\"\n"
+                "  }%s\n",
+                companies[i].name,
+                companies[i].category,
+                companies[i].address,
+                companies[i].website,
+                companies[i].source,
+                (i < company_count - 1) ? "," : ""
+            );
+        }
+
+        snprintf(result_buf + offset, sizeof(result_buf) - offset, "]\n");
+
+        struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
+            strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
+        );
+
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_resp);
+
+        MHD_destroy_response(mhd_resp);
+        company_free_results(companies, company_count);
+
+        return ret;
+    }
+
+
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
     struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
@@ -464,6 +544,9 @@ int main(int argc, char **argv) {
     printf("--------------------------------------------------\n");
     printf("5. 马来西亚公司注册资料查询 (SSM)\n");
     printf("   http://localhost:%d/?ssm=202001012345\n", PORT);
+    printf("--------------------------------------------------\n");
+    printf("6. 马来西亚黄页公司信息查询 (Company Yellow Page)\n");
+    printf("   http://localhost:%d/?comp=公司名称关键词\n", PORT);
     printf("==================================================\n");
     printf("⌨️  操作指令:\n");
     printf("   q → 安全关闭    r → 重新加载\n");
