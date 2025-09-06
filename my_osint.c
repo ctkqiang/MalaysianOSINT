@@ -18,6 +18,7 @@
 #include "./include/pdrm.h"
 #include "./include/mykad.h"
 #include "./include/sspi.h"
+#include "./include/ssm.h"
 #include "./include/rmp_wanted.h"
 #include "./include/memory.h"
 #include "./include/ecourt.h"

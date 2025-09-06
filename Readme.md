@@ -16,6 +16,11 @@
 作者不对任何滥用行为承担责任。本项目仅供 **教育、研究与反诈骗场景** 使用。
 
 ---
+<video src="https://github.com/ctkqiang/MalaysianOSINT/raw/assets/studio_video_1757091769573608.MP4" controls width="800" style="max-width:100%;">
+  您的浏览器不支持视频播放
+</video>
+
+---
 
 ## 功能特性
 
