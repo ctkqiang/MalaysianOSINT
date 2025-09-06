@@ -100,13 +100,13 @@ make run
 
 ```bash
 # 拉取镜像
-docker pull ctkqiang/malaysian-osint:latest
+docker pull ctkqiang/malaysianosint
 
 # 或本地构建
-docker build -t malaysian-osint .
+docker build -t malaysianosint .
 
 # 启动服务
-docker run -p 8080:8080 malaysian-osint
+docker run -p 8080:8080 malaysian-\osint
 ```
 
 ---
