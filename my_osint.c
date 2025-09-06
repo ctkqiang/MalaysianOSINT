@@ -43,6 +43,15 @@
 
 #define PORT 8080
 
+#define RESET       "\x1b[0m"
+#define RED         "\x1b[31m"
+#define GREEN       "\x1b[32m"
+#define YELLOW      "\x1b[33m"
+#define BLUE        "\x1b[34m"
+#define MAGENTA     "\x1b[35m"
+#define CYAN        "\x1b[36m"
+#define BOLD        "\x1b[1m"
+
 /**
  * 从 HTTP 请求中获取指定参数的值
  * @param conn MHD_Connection 连接对象
@@ -91,22 +100,31 @@ static enum MHD_Result handle_request(
     char client_ip[INET6_ADDRSTRLEN] = {0};
     const union MHD_ConnectionInfo *conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
-    if (conn_info && conn_info -> client_addr) {
-        struct sockaddr *sa = (struct sockaddr *) conn_info -> client_addr;
-        if (sa -> sa_family == AF_INET) {
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa) -> sin_addr), client_ip, sizeof(client_ip));
+    if (conn_info && conn_info->client_addr) {
+        struct sockaddr *sa = (struct sockaddr *)conn_info->client_addr;
+
+        if (sa->sa_family == AF_INET) {
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr), client_ip, sizeof(client_ip));
+        } else if (sa->sa_family == AF_INET6) {
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), client_ip, sizeof(client_ip));
+        } else {
+            snprintf(client_ip, sizeof(client_ip), "未知地址族");
         }
-        
-        if (sa -> sa_family == AF_INET6) {
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa) -> sin6_addr), client_ip, sizeof(client_ip));
-        } 
-        
-        snprintf(client_ip, sizeof(client_ip), "未知地址族");
-    } else {
-        snprintf(client_ip, sizeof(client_ip), "未知IP");
     }
 
-    printf("[访问日志] IP: %s | 方法: %s | 路径: %s\n", client_ip, method, url);
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    char timebuf[32];
+
+    strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
+
+    printf("\033[1;36m[访问日志]\033[0m "
+        "\033[1;33m%s\033[0m | "
+        "方法: \033[1;32m%-6s\033[0m | "
+        "路径: \033[1;35m%-40s\033[0m | "
+        "IP: \033[1;31m%s\033[0m\n",
+        timebuf, method, url, client_ip);
+
 
     if (strcmp(method, "GET") != 0) {
         const char *msg = "Only GET supported\n";
@@ -473,47 +491,30 @@ static enum MHD_Result handle_request(
     }
 
     if (social) {
-        char result_buf[8192];
-
-
         init_curl();
 
-        int offset = snprintf(
-            result_buf, sizeof(result_buf),
-            "Sherlock-style Username Search for: %s\n"
-            "{\n"
-            "  \"username\": \"%s\",\n"
-            "  \"results\": [\n",
-            social,
-            social
+        struct social_state *state = malloc(sizeof(*state));
+
+        state -> username = social;
+        state -> current_target = 0;
+
+        struct MHD_Response *response = MHD_create_response_from_callback(
+            MHD_SIZE_UNKNOWN,
+            8192,
+            &callback_send_chunk,  
+            state,                 
+            free                   
         );
 
-        for (size_t i = 0; i < targets_count; i++) {
-            int found = check_username(&targets[i], social);
-
-            offset += snprintf(
-                result_buf + offset, sizeof(result_buf) - offset,
-                "    {\"site\": \"%s\", \"found\": %s}%s\n",
-                targets[i].name,
-                found ? "true" : "false",
-                (i < targets_count - 1) ? "," : ""
-            );
-        }
+        MHD_add_response_header(response, "Content-Type", "text/plain");
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
 
         cleanup_curl();
 
-        snprintf(result_buf + offset, sizeof(result_buf) - offset, "  ]\n}\n");
-
-        struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
-            strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
-        );
-
-        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_resp);
-
-        MHD_destroy_response(mhd_resp);
-     
         return ret;
     }
+
 
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
@@ -549,56 +550,62 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    // 打印程序信息和使用说明
-    printf("\n");
-    printf("███╗   ███╗██╗   ██╗ ██████╗ ███████╗██╗███╗   ██╗████████╗\n");
-    printf("████╗ ████║╚██╗ ██╔╝██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝\n");
-    printf("██╔████╔██║ ╚████╔╝ ██║   ██║███████╗██║██╔██╗ ██║   ██║   \n");
-    printf("██║╚██╔╝██║  ╚██╔╝  ██║   ██║╚════██║██║██║╚██╗██║   ██║   \n");
-    printf("██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║██║██║ ╚████║   ██║   \n");
-    printf("╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   \n");
-    printf("马来西亚 OSINT 半自动查询系统\n");
-    printf("==================================================\n");
-    printf("           Malaysian OSINT Query System\n");
-    printf("==================================================\n");
-    printf("👨💻 作者: 钟智强 <johnmelodymel@qq.com>\n");
-    printf("🔖 版本: v0.1.0 (编译: %s %s)\n", __DATE__, __TIME__);
-    printf("==================================================\n");
-    printf("⚠️  法律声明: 根据1997年电脑犯罪法令第5条文\n");
-    printf("   仅限授权安全研究及反诈骗调查使用\n");
-    printf("   严禁非法用途，违者必究\n");
-    printf("==================================================\n");
-    printf("🤝 政府合作: PDRM/MCMC/移民局欢迎技术合作\n");
-    printf("==================================================\n");
-    printf("🟢 服务状态: 已启动\n");
-    printf("🌐 服务地址: http://localhost:%d\n", PORT);
-    printf("==================================================\n");
-    printf("📡 查询接口:\n");
-    printf("==================================================\n");
-    printf("1. 马来西亚皇家警察 (PDRM) 反钱驴检查系统 (Semak Mule)\n");
-    printf("   http://localhost:%d/?q=0123456789\n", PORT);
-    printf("--------------------------------------------------\n");
-    printf("2. 移民局身份证信息查询 (SSPI)\n");
-    printf("   http://localhost:%d/?id=1234567890\n", PORT);
-    printf("--------------------------------------------------\n");
-    printf("3. 马来西亚法庭记录查询 (eCourt)\n");
-    printf("   http://localhost:%d/?name=姓名\n", PORT);
-    printf("--------------------------------------------------\n");
-    printf("4. 马来西亚皇家警察 (PDRM) 通缉名单核查 (Wanted List)\n");
-    printf("   http://localhost:%d/?wanted=身份证号\n", PORT);
-    printf("--------------------------------------------------\n");
-    printf("5. 马来西亚公司注册资料查询 (SSM)\n");
-    printf("   http://localhost:%d/?ssm=202001012345\n", PORT);
-    printf("--------------------------------------------------\n");
-    printf("6. 马来西亚黄页公司信息查询 (Company Yellow Page)\n");
-    printf("   http://localhost:%d/?comp=公司名称关键词\n", PORT);
-    printf("==================================================\n");
-    printf("⌨️  操作指令:\n");
+    const char *banner_lines[] = {
+        "\n",
+        BOLD BLUE "███╗   ███╗██╗   ██╗ ██████╗ ███████╗██╗███╗   ██╗████████╗" RESET,
+        BOLD BLUE "████╗ ████║╚██╗ ██╔╝██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝" RESET,
+        BOLD BLUE "██╔████╔██║ ╚████╔╝ ██║   ██║███████╗██║██╔██╗ ██║   ██║   " RESET,
+        BOLD BLUE "██║╚██╔╝██║  ╚██╔╝  ██║   ██║╚════██║██║██║╚██╗██║   ██║   " RESET,
+        BOLD BLUE "██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║██║██║ ╚████║   ██║   " RESET,
+        BOLD BLUE "╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   " RESET,
+        BOLD GREEN "🟢 马来西亚 OSINT 半自动查询系统" RESET,
+        CYAN "==================================================" RESET,
+        BOLD GREEN "           Malaysian OSINT Query System" RESET,
+        CYAN "==================================================" RESET,
+        YELLOW "⚠️  法律声明: 根据1997年电脑犯罪法令第5条文\n   仅限授权安全研究及反诈骗调查使用\n   严禁非法用途，违者必究" RESET,
+        GREEN "🤝 政府合作: PDRM/MCMC/移民局欢迎技术合作" RESET,
+        CYAN "==================================================" RESET,
+        BOLD GREEN "🟢 服务状态: 已启动" RESET,
+        NULL
+    };
+
+    for (int i = 0; banner_lines[i]; i++) {
+        printf("%s\n", banner_lines[i]);
+    }
+
+    // 动态接口
+    printf(BOLD "🌐 服务地址: " GREEN "http://localhost:%d\n" RESET, PORT);
+    printf(CYAN "==================================================\n" RESET);
+    printf(BOLD "📡 查询接口:\n" RESET);
+    printf(CYAN "==================================================\n" RESET);
+
+    const struct {
+        const char *desc;
+        const char *url;
+    } endpoints[] = {
+        {"1. PDRM 反钱驴检查系统 (Semak Mule)", "http://localhost:%d/?q=0123456789"},
+        {"2. 移民局身份证信息查询 (SSPI)", "http://localhost:%d/?id=1234567890"},
+        {"3. 马来西亚法庭记录查询 (eCourt)", "http://localhost:%d/?name=姓名"},
+        {"4. PDRM 通缉名单核查 (Wanted List)", "http://localhost:%d/?wanted=身份证号"},
+        {"5. 公司注册资料查询 (SSM)", "http://localhost:%d/?ssm=202001012345"},
+        {"6. 黄页公司信息查询 (Company Yellow Page)", "http://localhost:%d/?comp=公司名称关键词"},
+        {"7. 社交媒体用户名查询 (Sherlock-style)", "http://localhost:%d/?social=用户名"},
+    };
+
+    for (int i = 0; i < sizeof(endpoints)/sizeof(endpoints[0]); i++) {
+        printf(BOLD "%s\n" RESET "   ", endpoints[i].desc);
+        printf(GREEN);
+        printf(endpoints[i].url, PORT);
+        printf(RESET "\n--------------------------------------------------\n");
+    }
+
+    printf(BOLD "⌨️  操作指令:\n" RESET);
     printf("   q → 安全关闭    r → 重新加载\n");
-    printf("   h → 帮助信息    \n");
-    printf("==================================================\n");
-    printf("💡 提示: 使用浏览器或curl访问上述接口进行查询\n");
-    printf("==================================================\n\n");
+    printf("   h → 帮助信息\n");
+    printf(CYAN "==================================================\n" RESET);
+    printf(BOLD "💡 提示: 使用浏览器或curl访问上述接口进行查询\n" RESET);
+    printf(CYAN "==================================================\n\n" RESET);
+
 
     // 等待用户输入 'q' 或 'Q' 来安全关闭服务器
     while ((ch = getchar()) != EOF) {

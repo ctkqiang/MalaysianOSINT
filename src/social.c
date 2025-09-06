@@ -6,6 +6,8 @@
 #include "../include/memory.h"
 #include "../include/social.h"
 
+#define MHD_CONTENT_READER_END_WITHOUT_FLUSH 0
+#define MHD_CONTENT_READER_END_OF_STREAM 0
 
 /**
  * CURL写回调函数，用于接收HTTP响应数据并存储到用户定义的结构体中
@@ -40,14 +42,87 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdat
     return total;
 }
 
+/**
+ * 初始化CURL库
+ * 
+ * 该函数用于在程序启动时初始化CURL库，为后续的HTTP请求做准备。
+ * 它会初始化所有的CURL功能，包括所有支持的协议和SSL功能。
+ * 这个函数应该在程序开始时调用，并且在程序生命周期内只调用一次。
+ * 
+ * @note 这个函数不是线程安全的，应该在创建任何线程之前调用
+ * @note 调用此函数后，必须在程序结束前调用cleanup_curl()进行清理
+ */
 void init_curl() {
     curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
+/**
+ * 清理CURL库
+ * 
+ * 该函数用于在程序结束时清理CURL库所使用的所有资源。
+ * 它会释放init_curl()分配的所有资源，包括全局数据和内存。
+ * 这个函数应该在程序结束时调用，并且在程序生命周期内只调用一次。
+ * 
+ * @note 这个函数不是线程安全的，应该在所有CURL操作完成后调用
+ * @note 调用此函数后，如果还需要使用CURL，需要重新调用init_curl()
+ */
 void cleanup_curl() {
     curl_global_cleanup();
 }
 
+/**
+ * HTTP响应数据分块发送回调函数
+ * 
+ * 该函数用于处理HTTP响应数据的分块发送。它会逐个检查社交媒体目标，
+ * 并生成对应的用户名检查结果。每次调用会处理一个社交媒体平台的检查结果。
+ * 
+ * @param cls 指向用户自定义数据的指针，这里是social_state结构体
+ * @param pos 当前数据块的位置（未使用）
+ * @param buf 用于存储要发送的数据的缓冲区
+ * @param max 缓冲区的最大大小
+ * 
+ * @return 返回写入缓冲区的字节数，如果没有更多数据返回MHD_CONTENT_READER_END_OF_STREAM
+ * 
+ * @note 这个函数会被HTTP服务器框架重复调用，直到所有目标都被检查完毕
+ */
+ssize_t callback_send_chunk(void *cls, uint64_t pos, char *buf, size_t max) {
+    struct social_state *state = (struct social_state *)cls;
+
+    if (state -> current_target >= targets_count) return MHD_CONTENT_READER_END_OF_STREAM;
+    
+    size_t n = 0;
+
+    char url[512];
+    snprintf(url, sizeof(url), targets[state -> current_target].url_template, state -> username);
+
+    int found = check_username(&targets[state -> current_target], state -> username);
+
+    if (found) {
+        n = snprintf(buf, max, "[+] %s: username exists at %s\n", targets[state -> current_target].name, url);
+    } else {
+        n = snprintf(buf, max, "[-] %s: username not found\n", targets[state -> current_target].name);
+    }
+
+    state -> current_target++;
+    
+    return n;
+}
+
+/**
+ * 检查用户名在特定社交媒体平台上是否存在
+ * 
+ * 该函数通过HTTP请求检查指定的用户名在给定的社交媒体平台上是否存在。
+ * 它会构造完整的URL，发送HTTP请求，并分析响应来判断用户名是否存在。
+ * 
+ * @param target 指向SocialTarget结构体的指针，包含平台名称和URL模板
+ * @param username 要检查的用户名
+ * 
+ * @return 如果用户名存在返回1，不存在返回0
+ * 
+ * @note 函数使用CURL库发送HTTP请求，超时时间设置为3秒
+ * @note 函数会检查HTTP状态码和响应内容中是否包含用户名
+ * @note 如果请求失败会打印错误信息到标准错误输出
+ */
 int check_username(const SocialTarget *target, const char *username) {
     CURL *curl;
     CURLcode res;
@@ -62,6 +137,7 @@ int check_username(const SocialTarget *target, const char *username) {
         snprintf(full_url, sizeof(full_url), target->url_template, username);
 
         curl_easy_setopt(curl, CURLOPT_URL, full_url);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &chunk);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
@@ -91,7 +167,7 @@ int check_username(const SocialTarget *target, const char *username) {
 SocialTarget targets[] = {
     // Global / previously added
     {"GitHub", "https://github.com/%s"},
-    {"Twitter", "https://twitter.com/%s"},
+    {"X", "https://x.com/%s"},
     {"Reddit", "https://www.reddit.com/user/%s"},
     {"Instagram", "https://www.instagram.com/%s"},
     {"TikTok", "https://www.tiktok.com/@%s"},
@@ -264,11 +340,6 @@ SocialTarget targets[] = {
     
     // Europe
     {"VKontakte Music", "https://vk.com/audio%s"},
-    {"Tuenti", "https://www.tuenti.com/%s"},
-    {"StudiVZ", "https://www.studivz.net/%s"},
-    {"Netlog", "https://netlog.com/%s"},
-    {"Bebo", "https://bebo.com/%s"},
-    {"Friendster", "https://www.friendster.com/%s"},
     {"Hi5", "https://hi5.com/friend/displayProfile.do?userid=%s"},
     {"Tagged", "https://www.tagged.com/profile/%s"},
     {"MeetMe", "https://www.meetme.com/%s"},
@@ -400,4 +471,4 @@ SocialTarget targets[] = {
     {"Guerrilla Mail", "https://www.guerrillamail.com/%s"}
 };
 
-size_t count = sizeof(targets) / sizeof(targets[0]);
+size_t targets_count = sizeof(targets) / sizeof(targets[0]);
