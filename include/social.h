@@ -12,7 +12,9 @@ typedef struct {
 
 
 void init_curl();
+
 void cleanup_curl();
+
 int check_email(const SocialTarget *target, const char *email);
 
 #endif
