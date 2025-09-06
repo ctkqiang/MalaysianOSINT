@@ -21,7 +21,8 @@
         "string": "c",
         "unordered_map": "c",
         "vector": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "__locale": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
