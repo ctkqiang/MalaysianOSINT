@@ -17,6 +17,15 @@
 
 ---
 
+# 🎥 功能演示
+
+<video width="800" controls>
+  <source src="./assets/studio_video_1757091769573608.MP4" type="video/mp4">
+  您的浏览器不支持视频播放
+</video>
+
+---
+
 ## 功能特性
 
 * **PDRM Semak Mule 接口集成**
