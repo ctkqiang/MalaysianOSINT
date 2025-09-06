@@ -17,4 +17,7 @@ void cleanup_curl();
 
 int check_username(const SocialTarget *target, const char *email);
 
+extern SocialTarget targets[];
+extern size_t targets_count;
+
 #endif

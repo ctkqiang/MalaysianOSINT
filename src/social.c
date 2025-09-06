@@ -68,21 +68,30 @@ int check_username(const SocialTarget *target, const char *username) {
 
         res = curl_easy_perform(curl);
         if(res != CURLE_OK) {
-            fprintf(stderr, "[%s] curl error: %s\n", target->name, curl_easy_strerror(res));
+            fprintf(stderr, "[%s] curl error: %s\n", target -> name, curl_easy_strerror(res));
         } else {
             long status;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
-            if(status == 200 && strstr(chunk.response, username) != NULL) {
-                printf("[+] %s: username exists at %s\n", target->name, full_url);
+            if(status == 200 && strstr(chunk.data, username) != NULL) {
+                printf("[+] %s: username exists at %s\n", target -> name, full_url);
                 found = 1;
             } else {
-                printf("[-] %s: username not found\n", target->name);
+                printf("[-] %s: username not found\n", target -> name);
             }
         }
 
         curl_easy_cleanup(curl);
-        free(chunk.response);
+        free(chunk.data);
     }
+
     return found;
 }
+
+SocialTarget targets[] = {
+    {"GitHub", "https://github.com/%s"},
+    {"Twitter", "https://twitter.com/%s"},
+    {"Reddit", "https://www.reddit.com/user/%s"}
+};
+
+size_t targets_count = sizeof(targets) / sizeof(targets[0]);
