@@ -17,12 +17,7 @@
 
 ---
 
-# 🎥 功能演示
-
-<video width="800" controls>
-  <source src="https://github.com/ctkqiang/MalaysianOSINT/raw/refs/heads/11-feature-%E6%B7%BB%E5%8A%A0ssm%E5%85%AC%E5%8F%B8%E6%B3%A8%E5%86%8C%E4%BF%A1%E6%81%AF%E6%9F%A5%E9%AA%8C%E5%8A%9F%E8%83%BD/assets/studio_video_1757091769573608.MP4" type="video/mp4">
-  您的浏览器不支持视频播放
-</video>
+![功能演示](https://github.com/ctkqiang/MalaysianOSINT/raw/refs/heads/11-feature-%E6%B7%BB%E5%8A%A0ssm%E5%85%AC%E5%8F%B8%E6%B3%A8%E5%86%8C%E4%BF%A1%E6%81%AF%E6%9F%A5%E9%AA%8C%E5%8A%9F%E8%83%BD/assets/studio_video_1757091769573608.MP4)
 
 ---
 
