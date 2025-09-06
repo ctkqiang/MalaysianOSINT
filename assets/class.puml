@@ -1,0 +1,88 @@
+@startuml
+title Malaysian OSINT Query System - Class Diagram
+
+package "Core System" {
+  class HTTPServer {
+    - port: int
+    - daemon: MHD_Daemon*
+    + start()
+    + stop()
+    + handle_request()
+    - get_param()
+  }
+}
+
+package "API Services" {
+  class PDRMService {
+    + semak_mule()
+    + fetch_wanted_list()
+    + parse_wanted_list()
+  }
+
+  class SSPIService {
+    + check()
+    + response_free()
+  }
+
+  class MyKadService {
+    + check()
+  }
+
+  class ECourtService {
+    + search()
+    + response_free()
+  }
+
+  class SSMService {
+    + get_format()
+    + get_entity_code()
+  }
+
+  class SPRMService {
+    + fetch_html()
+    + parse_html()
+    + search()
+    + free_list()
+  }
+}
+
+package "Data Models" {
+  class WantedPerson {
+    + name: string
+    + age: string
+    + photo_url: string
+  }
+
+  class PesalahList {
+    + count: int
+    + list: Pesalah[]
+  }
+
+  class Pesalah {
+    + name: string
+    + ic: string
+    + employer: string
+    + position: string
+    + case_no: string
+    + law: string
+    + sentence: string
+  }
+
+  class EJudgmentResponse {
+    + raw_json: string
+  }
+}
+
+HTTPServer --> PDRMService
+HTTPServer --> SSPIService
+HTTPServer --> MyKadService
+HTTPServer --> ECourtService
+HTTPServer --> SSMService
+HTTPServer --> SPRMService
+
+PDRMService ..> WantedPerson
+SPRMService ..> PesalahList
+PesalahList *-- Pesalah
+ECourtService ..> EJudgmentResponse
+
+@enduml

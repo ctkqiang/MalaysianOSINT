@@ -1,0 +1,48 @@
+@startuml
+title Malaysian OSINT Query System - Sequence Diagram
+
+actor Client
+participant "HTTP Server" as Server
+participant "PDRM API" as PDRM
+participant "SSPI API" as SSPI
+participant "MyKad API" as MyKad
+participant "E-Court API" as Court
+participant "SSM API" as SSM
+
+Client -> Server: HTTP GET Request
+
+alt Phone/Bank Account Query (?q=)
+    Server -> PDRM: Check Semak Mule
+    PDRM --> Server: Return Results
+    Server -> Server: Parse JSON Response
+    Server --> Client: Display Results
+
+else IC Number Query (?id=)
+    Server -> SSPI: Check IC Status
+    SSPI --> Server: Return Status
+    Server -> MyKad: Get MyKad Info
+    MyKad --> Server: Return Info
+    Server -> PDRM: Check Wanted List
+    PDRM --> Server: Return Wanted Status
+    Server -> Server: Format Response
+    Server --> Client: Display Results
+
+else Name Query (?name=)
+    Server -> Court: Search Court Records
+    Court --> Server: Return Cases
+    Server -> Server: Format JSON Response
+    Server --> Client: Display Results
+
+else SSM Query (?ssm=)
+    Server -> SSM: Validate Number Format
+    SSM --> Server: Return Validation
+    Server -> SSM: Get Entity Type
+    SSM --> Server: Return Entity Info
+    Server -> Server: Format Response
+    Server --> Client: Display Results
+
+else Invalid Request
+    Server --> Client: Return Error 400
+end
+
+@enduml

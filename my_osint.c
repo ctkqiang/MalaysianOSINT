@@ -1,11 +1,26 @@
 /**
- * 马来西亚 OSINT 半自动查询器
- * 这是一个用于查询可疑电话号码和银行账号的 HTTP 服务器
- * 通过调用马来西亚皇家警察(PDRM)的 API 来验证目标是否涉及诈骗活动
- * 
- * @brief 马来西亚 OSINT 半自动查询器
- * @author 钟智强
+ * @brief 马来西亚 OSINT 半自动查询器 (Malaysian OSINT Semi-Automated Query Tool)
+ *
+ * 这是一个基于 HTTP 的轻量级服务器，用于辅助查询潜在的诈骗目标信息。
+ * 目前支持对 **可疑电话号码** 和 **银行账号** 进行检索，
+ * 并通过调用 **马来西亚皇家警察 (PDRM) 官方 API** 验证目标是否涉及诈骗活动。
+ *
+ * 功能特点:
+ * - 提供 RESTful 风格接口，支持 JSON 输入输出
+ * - 查询结果基于官方数据源，确保数据可靠性
+ * - 可扩展性设计，后续可支持更多数据源 (eCourt、RMP Wanted 等)
+ *
+ * 使用场景:
+ * - 安全研究 / 网络威胁情报 (OSINT)
+ * - 风险验证 / 金融风控
+ * - 学术研究 / 公益用途
+ *
+ * ⚠️ 本工具仅供教育、研究与安全用途，请勿用于非法活动。
+ *
+ * @author  钟智强
+ * @version v0.1.1
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
