@@ -89,9 +89,315 @@ int check_username(const SocialTarget *target, const char *username) {
 }
 
 SocialTarget targets[] = {
+    // Global / previously added
     {"GitHub", "https://github.com/%s"},
     {"Twitter", "https://twitter.com/%s"},
-    {"Reddit", "https://www.reddit.com/user/%s"}
+    {"Reddit", "https://www.reddit.com/user/%s"},
+    {"Instagram", "https://www.instagram.com/%s"},
+    {"TikTok", "https://www.tiktok.com/@%s"},
+    {"Telegram", "https://t.me/%s"},
+    {"Facebook", "https://www.facebook.com/%s"},
+    {"YouTube", "https://www.youtube.com/%s"},
+    {"LinkedIn", "https://www.linkedin.com/in/%s"},
+    {"Snapchat", "https://www.snapchat.com/add/%s"},
+    {"Pinterest", "https://www.pinterest.com/%s"},
+    {"Medium", "https://medium.com/@%s"},
+    {"Twitch", "https://www.twitch.tv/%s"},
+    {"Discord", "https://discord.com/users/%s"},
+    {"Flickr", "https://www.flickr.com/people/%s"},
+    {"Spotify", "https://open.spotify.com/user/%s"},
+    {"Steam", "https://steamcommunity.com/id/%s"},
+    {"Vimeo", "https://vimeo.com/%s"},
+    {"WordPress", "https://%s.wordpress.com"},
+    {"GitLab", "https://gitlab.com/%s"},
+    
+    // Russia
+    {"VK", "https://vk.com/%s"},
+    {"Odnoklassniki", "https://ok.ru/profile/%s"},
+    {"Yandex", "https://yandex.ru/%s"},
+    {"Mail.ru", "https://my.mail.ru/%s"},
+    
+    // EU / Western
+    {"Xing", "https://www.xing.com/profile/%s"},
+    {"ResearchGate", "https://www.researchgate.net/profile/%s"},
+    {"StackOverflow", "https://stackoverflow.com/users/%s"},
+    {"Badoo", "https://badoo.com/%s"},
+    
+    // USA
+    {"Quora", "https://www.quora.com/profile/%s"},
+    {"Dribbble", "https://dribbble.com/%s"},
+    {"Behance", "https://www.behance.net/%s"},
+    {"Goodreads", "https://www.goodreads.com/%s"},
+    {"DeviantArt", "https://www.deviantart.com/%s"},
+    {"Patreon", "https://www.patreon.com/%s"},
+    {"SoundCloud", "https://soundcloud.com/%s"},
+    
+    // China
+    {"Weibo", "https://weibo.com/%s"},
+    {"WeChat", "https://wechat.com/%s"},
+    {"Douyin", "https://www.douyin.com/user/%s"},
+    {"Bilibili", "https://space.bilibili.com/%s"},
+    {"QQ", "https://user.qzone.qq.com/%s"},
+    {"Zhihu", "https://www.zhihu.com/people/%s"},
+    
+    // Additional Global Platforms
+    {"WhatsApp", "https://wa.me/%s"},
+    {"Signal", "https://signal.me/#p/%s"},
+    {"Viber", "https://viber.com/%s"},
+    {"Skype", "https://join.skype.com/invite/%s"},
+    {"Zoom", "https://zoom.us/profile/%s"},
+    {"Microsoft Teams", "https://teams.microsoft.com/profile/%s"},
+    {"Slack", "https://%s.slack.com"},
+    {"Mastodon", "https://mastodon.social/@%s"},
+    {"Threads", "https://www.threads.net/@%s"},
+    {"BlueSky", "https://bsky.app/profile/%s"},
+    {"Clubhouse", "https://www.clubhouse.com/@%s"},
+    {"OnlyFans", "https://onlyfans.com/%s"},
+    {"Substack", "https://%s.substack.com"},
+    {"Ghost", "https://%s.ghost.io"},
+    {"Tumblr", "https://%s.tumblr.com"},
+    {"LiveJournal", "https://%s.livejournal.com"},
+    {"Blogger", "https://%s.blogspot.com"},
+    {"Wix", "https://%s.wixsite.com"},
+    {"Squarespace", "https://%s.squarespace.com"},
+    {"Linktree", "https://linktr.ee/%s"},
+    {"About.me", "https://about.me/%s"},
+    {"Carrd", "https://%s.carrd.co"},
+    
+    // Professional/Business
+    {"AngelList", "https://angel.co/%s"},
+    {"Crunchbase", "https://www.crunchbase.com/person/%s"},
+    {"ProductHunt", "https://www.producthunt.com/@%s"},
+    {"Kaggle", "https://www.kaggle.com/%s"},
+    {"HackerRank", "https://www.hackerrank.com/%s"},
+    {"LeetCode", "https://leetcode.com/%s"},
+    {"CodePen", "https://codepen.io/%s"},
+    {"Replit", "https://replit.com/@%s"},
+    {"Glitch", "https://glitch.com/@%s"},
+    {"Observable", "https://observablehq.com/@%s"},
+    {"Notion", "https://www.notion.so/%s"},
+    {"Figma", "https://www.figma.com/@%s"},
+    {"Adobe Portfolio", "https://%s.myportfolio.com"},
+    {"Artstation", "https://www.artstation.com/%s"},
+    {"500px", "https://500px.com/p/%s"},
+    {"Unsplash", "https://unsplash.com/@%s"},
+    {"Shutterstock", "https://www.shutterstock.com/g/%s"},
+    
+    // Gaming
+    {"Xbox Live", "https://account.xbox.com/en-us/profile?gamertag=%s"},
+    {"PlayStation", "https://psnprofiles.com/%s"},
+    {"Nintendo", "https://www.nintendo.com/us/switch/friends/%s"},
+    {"Epic Games", "https://epicgames.com/site/en-US/profile/%s"},
+    {"Battle.net", "https://playoverwatch.com/en-us/career/pc/%s"},
+    {"Origin", "https://www.origin.com/profile/%s"},
+    {"Uplay", "https://club.ubisoft.com/en-US/profile/%s"},
+    {"Roblox", "https://www.roblox.com/users/%s"},
+    {"Minecraft", "https://namemc.com/profile/%s"},
+    {"Fortnite Tracker", "https://fortnitetracker.com/profile/all/%s"},
+    {"PUBG Tracker", "https://pubgtracker.com/profile/pc/%s"},
+    {"League of Legends", "https://op.gg/summoner/userName=%s"},
+    {"CS:GO Stats", "https://csgostats.gg/player/%s"},
+    
+    // Music/Audio
+    {"Apple Music", "https://music.apple.com/profile/%s"},
+    {"Deezer", "https://www.deezer.com/en/profile/%s"},
+    {"Last.fm", "https://www.last.fm/user/%s"},
+    {"Bandcamp", "https://%s.bandcamp.com"},
+    {"Mixcloud", "https://www.mixcloud.com/%s"},
+    {"Audiomack", "https://audiomack.com/%s"},
+    {"ReverbNation", "https://www.reverbnation.com/%s"},
+    {"DistroKid", "https://distrokid.com/hyperfollow/%s"},
+    {"Genius", "https://genius.com/%s"},
+    {"Discogs", "https://www.discogs.com/user/%s"},
+    
+    // Dating/Social
+    {"Tinder", "https://tinder.com/@%s"},
+    {"Bumble", "https://bumble.com/%s"},
+    {"Hinge", "https://hinge.co/%s"},
+    {"Match", "https://www.match.com/%s"},
+    {"eHarmony", "https://www.eharmony.com/%s"},
+    {"OkCupid", "https://www.okcupid.com/profile/%s"},
+    {"POF", "https://www.pof.com/viewprofile.aspx?profile_id=%s"},
+    {"Zoosk", "https://www.zoosk.com/profile/%s"},
+    {"Coffee Meets Bagel", "https://coffeemeetsbagel.com/%s"},
+    {"Grindr", "https://www.grindr.com/%s"},
+    
+    // Forums/Communities
+    {"4chan", "https://boards.4chan.org/%s"},
+    {"8kun", "https://8kun.top/%s"},
+    {"Something Awful", "https://forums.somethingawful.com/member.php?action=getinfo&username=%s"},
+    {"NeoGAF", "https://www.neogaf.com/members/%s"},
+    {"ResetEra", "https://www.resetera.com/members/%s"},
+    {"Hacker News", "https://news.ycombinator.com/user?id=%s"},
+    {"Lobsters", "https://lobste.rs/u/%s"},
+    {"Slashdot", "https://slashdot.org/~%s"},
+    {"Digg", "https://digg.com/@%s"},
+    {"StumbleUpon", "https://www.stumbleupon.com/stumbler/%s"},
+    
+    // Regional/Country Specific
+    // Japan
+    {"Niconico", "https://www.nicovideo.jp/user/%s"},
+    {"Pixiv", "https://www.pixiv.net/users/%s"},
+    {"LINE", "https://line.me/R/ti/p/%s"},
+    {"Mixi", "https://mixi.jp/show_friend.pl?id=%s"},
+    {"2channel", "https://2ch.net/%s"},
+    
+    // Korea
+    {"KakaoTalk", "https://open.kakao.com/o/%s"},
+    {"Naver", "https://blog.naver.com/%s"},
+    {"Cyworld", "https://www.cyworld.com/home/%s"},
+    {"DC Inside", "https://gall.dcinside.com/%s"},
+    
+    // India
+    {"ShareChat", "https://sharechat.com/profile/%s"},
+    {"Moj", "https://www.moj.com/@%s"},
+    {"Josh", "https://www.josh.com/@%s"},
+    {"Roposo", "https://www.roposo.com/%s"},
+    
+    // Brazil
+    {"Orkut", "https://orkut.br.com/%s"},
+    {"Kwai", "https://www.kwai.com/@%s"},
+    
+    // Middle East
+    {"Imo", "https://imo.im/%s"},
+    {"ToTok", "https://totok.ai/%s"},
+    
+    // Europe
+    {"VKontakte Music", "https://vk.com/audio%s"},
+    {"Tuenti", "https://www.tuenti.com/%s"},
+    {"StudiVZ", "https://www.studivz.net/%s"},
+    {"Netlog", "https://netlog.com/%s"},
+    {"Bebo", "https://bebo.com/%s"},
+    {"Friendster", "https://www.friendster.com/%s"},
+    {"Hi5", "https://hi5.com/friend/displayProfile.do?userid=%s"},
+    {"Tagged", "https://www.tagged.com/profile/%s"},
+    {"MeetMe", "https://www.meetme.com/%s"},
+    {"IMVU", "https://www.imvu.com/catalog/web_search.php?keywords=%s"},
+    
+    // Video Platforms
+    {"Dailymotion", "https://www.dailymotion.com/%s"},
+    {"Metacafe", "https://www.metacafe.com/channels/%s"},
+    {"Veoh", "https://www.veoh.com/users/%s"},
+    {"Break", "https://www.break.com/user/%s"},
+    {"Vine", "https://vine.co/%s"},
+    {"IGTV", "https://www.instagram.com/tv/%s"},
+    {"YouTube Shorts", "https://youtube.com/shorts/%s"},
+    {"Loom", "https://www.loom.com/%s"},
+    {"Wistia", "https://%s.wistia.com"},
+    
+    // Livestreaming
+    {"Periscope", "https://www.pscp.tv/%s"},
+    {"YouNow", "https://www.younow.com/%s"},
+    {"Live.me", "https://www.liveme.com/v/%s"},
+    {"Bigo Live", "https://www.bigolive.tv/%s"},
+    {"StreamLabs", "https://streamlabs.com/%s"},
+    {"OBS", "https://obsproject.com/%s"},
+    {"Mixer", "https://mixer.com/%s"},
+    {"DLive", "https://dlive.tv/%s"},
+    {"Trovo", "https://trovo.live/%s"},
+    {"Facebook Gaming", "https://www.facebook.com/gaming/%s"},
+    {"YouTube Gaming", "https://gaming.youtube.com/channel/%s"},
+    
+    // Messaging Apps
+    {"Kik", "https://kik.me/%s"},
+    {"Wickr", "https://wickr.com/%s"},
+    {"Wire", "https://wire.com/@%s"},
+    {"Element", "https://matrix.to/#/@%s"},
+    {"Session", "https://getsession.org/%s"},
+    {"Briar", "https://briarproject.org/%s"},
+    {"Jami", "https://jami.net/%s"},
+    {"Tox", "https://tox.chat/%s"},
+    {"Ricochet", "https://ricochet.im/%s"},
+    
+    // Blockchain/Crypto
+    {"Steemit", "https://steemit.com/@%s"},
+    {"Hive", "https://hive.blog/@%s"},
+    {"Mirror", "https://mirror.xyz/%s"},
+    {"Lens Protocol", "https://lenster.xyz/u/%s"},
+    {"Farcaster", "https://warpcast.com/%s"},
+    {"BitClout", "https://bitclout.com/u/%s"},
+    {"Rally", "https://rally.io/%s"},
+    {"Foundation", "https://foundation.app/@%s"},
+    {"SuperRare", "https://superrare.co/%s"},
+    {"OpenSea", "https://opensea.io/%s"},
+    {"Rarible", "https://rarible.com/%s"},
+    
+    // Academic/Research
+    {"ORCID", "https://orcid.org/%s"},
+    {"Google Scholar", "https://scholar.google.com/citations?user=%s"},
+    {"Academia.edu", "https://independent.academia.edu/%s"},
+    {"Mendeley", "https://www.mendeley.com/profiles/%s"},
+    {"Zotero", "https://www.zotero.org/%s"},
+    {"Papers", "https://papers.ssrn.com/sol3/cf_dev/AbsByAuth.cfm?per_id=%s"},
+    {"PubMed", "https://pubmed.ncbi.nlm.nih.gov/?term=%s"},
+    {"arXiv", "https://arxiv.org/search/?searchtype=author&query=%s"},
+    {"bioRxiv", "https://www.biorxiv.org/search/%s"},
+    {"Coursera", "https://www.coursera.org/instructor/%s"},
+    {"edX", "https://www.edx.org/bio/%s"},
+    {"Udemy", "https://www.udemy.com/user/%s"},
+    {"Khan Academy", "https://www.khanacademy.org/profile/%s"},
+    
+    // Fitness/Health
+    {"Strava", "https://www.strava.com/athletes/%s"},
+    {"MyFitnessPal", "https://www.myfitnesspal.com/profile/%s"},
+    {"Fitbit", "https://www.fitbit.com/user/%s"},
+    {"Garmin Connect", "https://connect.garmin.com/modern/profile/%s"},
+    {"Nike Run Club", "https://www.nike.com/nrc/profile/%s"},
+    {"Adidas Running", "https://www.runtastic.com/users/%s"},
+    {"Peloton", "https://members.onepeloton.com/members/%s"},
+    
+    // Travel
+    {"TripAdvisor", "https://www.tripadvisor.com/members/%s"},
+    {"Booking.com", "https://www.booking.com/profiles/%s"},
+    {"Airbnb", "https://www.airbnb.com/users/show/%s"},
+    {"Couchsurfing", "https://www.couchsurfing.com/people/%s"},
+    {"Nomad List", "https://nomadlist.com/@%s"},
+    {"Foursquare", "https://foursquare.com/%s"},
+    {"Swarm", "https://swarmapp.com/user/%s"},
+    {"GetYourGuide", "https://www.getyourguide.com/profiles/%s"},
+    
+    // Food/Lifestyle
+    {"Yelp", "https://www.yelp.com/user_details?userid=%s"},
+    {"Zomato", "https://www.zomato.com/users/%s"},
+    {"OpenTable", "https://www.opentable.com/profiles/%s"},
+    {"Allrecipes", "https://www.allrecipes.com/cook/%s"},
+    {"Food52", "https://food52.com/users/%s"},
+    {"Epicurious", "https://www.epicurious.com/profiles/%s"},
+    {"Tasty", "https://tasty.co/@%s"},
+    
+    // E-commerce/Marketplace
+    {"Etsy", "https://www.etsy.com/people/%s"},
+    {"eBay", "https://www.ebay.com/usr/%s"},
+    {"Amazon", "https://www.amazon.com/gp/profile/amzn1.account.%s"},
+    {"Depop", "https://www.depop.com/%s"},
+    {"Poshmark", "https://poshmark.com/closet/%s"},
+    {"Mercari", "https://www.mercari.com/u/%s"},
+    {"Vinted", "https://www.vinted.com/member/%s"},
+    {"ThredUP", "https://www.thredup.com/%s"},
+    {"Vestiaire Collective", "https://www.vestiairecollective.com/members/%s"},
+    {"Grailed", "https://www.grailed.com/users/%s"},
+    {"StockX", "https://stockx.com/users/%s"},
+    {"GOAT", "https://www.goat.com/profile/%s"},
+    
+    // News/Media
+    {"Flipboard", "https://flipboard.com/@%s"},
+    {"Pocket", "https://getpocket.com/@%s"},
+    {"Feedly", "https://feedly.com/%s"},
+    {"NewsBlur", "https://newsblur.com/social/#/%s"},
+    {"AllSides", "https://www.allsides.com/users/%s"},
+    
+    // Miscellaneous
+    {"Archive.org", "https://archive.org/details/@%s"},
+    {"Internet Archive", "https://archive.org/details/@%s"},
+    {"Wayback Machine", "https://web.archive.org/web/*/%s"},
+    {"Have I Been Pwned", "https://haveibeenpwned.com/account/%s"},
+    {"Gravatar", "https://gravatar.com/%s"},
+    {"Keybase", "https://keybase.io/%s"},
+    {"OpenPGP", "https://keys.openpgp.org/search?q=%s"},
+    {"ProtonMail", "https://protonmail.com/%s"},
+    {"Tutanota", "https://tutanota.com/%s"},
+    {"Temp Mail", "https://temp-mail.org/en/%s"},
+    {"Guerrilla Mail", "https://www.guerrillamail.com/%s"}
 };
 
-size_t targets_count = sizeof(targets) / sizeof(targets[0]);
+size_t count = sizeof(targets) / sizeof(targets[0]);
