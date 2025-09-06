@@ -34,6 +34,7 @@
 #include "./include/mykad.h"
 #include "./include/sspi.h"
 #include "./include/sprm.h"
+#include "./include/social.h"
 #include "./include/ssm.h"
 #include "./include/company.h"
 #include "./include/rmp_wanted.h"

@@ -39,3 +39,50 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdat
     
     return total;
 }
+
+void init_curl() {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+void cleanup_curl() {
+    curl_global_cleanup();
+}
+
+int check_username(const SocialTarget *target, const char *username) {
+    CURL *curl;
+    CURLcode res;
+    
+    struct memory chunk = {0};
+    int found = 0;
+
+    curl = curl_easy_init();
+
+    if(curl) {
+        char full_url[512];
+        snprintf(full_url, sizeof(full_url), target->url_template, username);
+
+        curl_easy_setopt(curl, CURLOPT_URL, full_url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &chunk);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK) {
+            fprintf(stderr, "[%s] curl error: %s\n", target->name, curl_easy_strerror(res));
+        } else {
+            long status;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+
+            if(status == 200 && strstr(chunk.response, username) != NULL) {
+                printf("[+] %s: username exists at %s\n", target->name, full_url);
+                found = 1;
+            } else {
+                printf("[-] %s: username not found\n", target->name);
+            }
+        }
+
+        curl_easy_cleanup(curl);
+        free(chunk.response);
+    }
+    return found;
+}
