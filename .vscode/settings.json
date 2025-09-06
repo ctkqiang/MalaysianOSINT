@@ -49,7 +49,9 @@
         "stdlib.h": "c",
         "memory.h": "c",
         "company.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "social.h": "c",
+        "util.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
