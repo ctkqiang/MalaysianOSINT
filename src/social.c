@@ -188,6 +188,7 @@ SocialTarget targets[] = {
     {"Vimeo", "https://vimeo.com/%s"},
     {"WordPress", "https://%s.wordpress.com"},
     {"GitLab", "https://gitlab.com/%s"},
+    {"Google Developers", "https://developers.google.com/profile/u/%s"},
 
     // NSFW 
     {"PornHub", "https://www.pornhub.com/users/%s"},
