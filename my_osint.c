@@ -96,17 +96,17 @@ static enum MHD_Result handle_request(
     char *ssm = get_param(connection, "ssm");
     char *comp = get_param(connection, "comp");
     char *social = get_param(connection, "social");
-
+    
     char client_ip[INET6_ADDRSTRLEN] = {0};
     const union MHD_ConnectionInfo *conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
-    if (conn_info && conn_info->client_addr) {
-        struct sockaddr *sa = (struct sockaddr *)conn_info->client_addr;
+    if (conn_info && conn_info -> client_addr) {
+        struct sockaddr *sa = (struct sockaddr *) conn_info -> client_addr;
 
-        if (sa->sa_family == AF_INET) {
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr), client_ip, sizeof(client_ip));
-        } else if (sa->sa_family == AF_INET6) {
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), client_ip, sizeof(client_ip));
+        if (sa -> sa_family == AF_INET) {
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa) -> sin_addr), client_ip, sizeof(client_ip));
+        } else if (sa -> sa_family == AF_INET6) {
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa) -> sin6_addr), client_ip, sizeof(client_ip));
         } else {
             snprintf(client_ip, sizeof(client_ip), "localhost");
         }
@@ -118,12 +118,23 @@ static enum MHD_Result handle_request(
 
     strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
 
+    const char *query = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, NULL);
+
+    char full_url[1024];
+
+    if (query) {
+        snprintf(full_url, sizeof(full_url), "%s?%s", url, query);
+    } else {
+        snprintf(full_url, sizeof(full_url), "%s", url);
+    }
+
     printf("\033[1;36m[访问日志]\033[0m "
         "\033[1;33m%s\033[0m | "
         "方法: \033[1;32m%-6s\033[0m | "
         "路径: \033[1;35m%-40s\033[0m | "
         "IP: \033[1;31m%s\033[0m\n",
-        timebuf, method, url, client_ip);
+        timebuf, method, full_url, client_ip);
+
 
 
     if (strcmp(method, "GET") != 0) {
