@@ -347,6 +347,28 @@ Instagram: https://instagram.com/username
 ...
 ```
 
+### 马来西亚国家银行消费者警示名单查询 (BNM Consumer Alert)
+
+```bash
+curl "http://localhost:8080/?bnm=公司名称"
+```
+
+返回示例：
+
+```json
+BNM FCA List（2 条）：
+[
+ {"name":"XX投资公司","website":"example.com"},
+ {"name":"YY金融服务","website":"example.net"}
+]
+```
+
+如果抓取失败，将返回：
+
+```plaintext
+🚨 BNM抓取失败
+```
+
 ---
 
 ## 开发指南
