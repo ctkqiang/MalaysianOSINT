@@ -1,41 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malaysian OSINT - 专业情报查询系统</title>
-    <link rel="stylesheet" href="https://unpkg.com/pure-css@3.0.0/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #00ff00;
-            --bg: #1a1a1a;
+            --primary-dark: #00cc00;
+            --bg: #0a0a0a;
+            --panel-bg: rgba(20, 20, 20, 0.85);
             --text: #e0e0e0;
+            --border: #00ff00;
+            --success: #00ff8c;
+            --warning: #ffcc00;
+            --danger: #ff2c55;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            margin: 0;
             background: var(--bg);
             color: var(--text);
             font-family: 'Courier New', monospace;
-            overflow: hidden;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 255, 0, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 255, 0, 0.05) 0%, transparent 20%),
+                linear-gradient(rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.95)),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="rgba(0,50,0,0.1)" x="0" y="0" width="100" height="100"/><path d="M0 0L100 100M100 0L0 100" stroke="rgba(0,80,0,0.1)" stroke-width="1"/></svg>');
+            min-height: 100vh;
+            padding: 1rem;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
 
-        .terminal {
-            width: 90%;
-            max-width: 900px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            background: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+
+        .ascii-art {
+            font-size: 0.7rem;
+            line-height: 1.2;
+            white-space: pre;
+            margin: 0 auto 1rem;
+            color: var(--primary);
+            text-shadow: 0 0 5px var(--primary);
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 20, 0, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
             position: relative;
             overflow: hidden;
         }
 
-        .terminal::before {
+        .api-panel::before {
             content: '';
             position: absolute;
             top: 0;
@@ -43,170 +136,470 @@
             width: 100%;
             height: 4px;
             background: linear-gradient(90deg, var(--primary), transparent);
-            animation: scan 2s linear infinite;
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
         }
 
-        @keyframes scan {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        .api-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
         }
 
-        .header {
-            margin-bottom: 2rem;
-            opacity: 0;
-            animation: fadeIn 1s forwards;
+        .api-panel:hover::before {
+            transform: translateX(100%);
         }
 
-        .content {
-            opacity: 0;
-            animation: fadeIn 1s 0.5s forwards;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        .ascii-art {
-            font-size: 0.7rem;
-            line-height: 1.2;
-            white-space: pre;
-            margin-bottom: 2rem;
-            color: var(--primary);
-        }
-
-        .command-line {
+        .api-header {
             display: flex;
-            margin: 1rem 0;
             align-items: center;
-        }
-
-        .prompt {
+            margin-bottom: 1rem;
             color: var(--primary);
-            margin-right: 1rem;
         }
 
-        .command {
-            position: relative;
+        .api-icon {
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
         }
 
-        .command::after {
-            content: '|';
-            position: absolute;
-            right: -10px;
-            animation: blink 1s infinite;
+        .api-title {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
-        @keyframes blink {
-            50% { opacity: 0; }
+        .api-description {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            min-height: 40px;
         }
 
         .api-endpoint {
-            background: rgba(0, 255, 0, 0.1);
+            background: rgba(0, 20, 0, 0.5);
             padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
             border-left: 3px solid var(--primary);
-            margin: 1rem 0;
-            transition: all 0.3s;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
-        .api-endpoint:hover {
-            transform: translateX(10px);
-            background: rgba(0, 255, 0, 0.15);
+        .api-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .pure-button-primary {
+        .api-button {
             background: var(--primary);
-            color: var(--bg);
+            color: black;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .pure-button-primary:hover {
-            background: #00cc00;
+        .api-button:hover {
+            background: var(--primary-dark);
             transform: scale(1.05);
+        }
+
+        .api-button.copy {
+            background: rgba(0, 255, 0, 0.2);
+            color: var(--primary);
+        }
+
+        .api-button.copy:hover {
+            background: rgba(0, 255, 0, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(0, 255, 0, 0.2);
+            margin-top: 2rem;
+            background: var(--panel-bg);
+            border-radius: 8px;
+        }
+
+        .launch-button {
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: black;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1rem 0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .launch-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--primary); }
+            50% { box-shadow: 0 0 20px var(--primary); }
+            100% { box-shadow: 0 0 5px var(--primary); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .ascii-art {
+                font-size: 0.5rem;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="terminal">
+    <canvas class="matrix-bg" id="matrixBg"></canvas>
+    
+    <div class="container">
         <div class="header">
-            <div class="ascii-art">
+            <div class="ascii-art" id="asciiArt">
 ███╗   ███╗██╗   ██╗ ██████╗ ███████╗██╗███╗   ██╗████████╗
 ████╗ ████║╚██╗ ██╔╝██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝
 ██╔████╔██║ ╚████╔╝ ██║   ██║███████╗██║██╔██╗ ██║   ██║   
 ██║╚██╔╝██║  ╚██╔╝  ██║   ██║╚════██║██║██║╚██╗██║   ██║   
 ██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║██║██║ ╚████║   ██║   
-╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   </div>
-            <div class="command-line">
-                <span class="prompt">root@osint:~$</span>
-                <span class="command">./mo --version</span>
+╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   
             </div>
-            <div>马来西亚 OSINT 半自动查询系统 v0.1.0</div>
+            <h1 class="title">马来西亚 OSINT 情报系统</h1>
+            <p class="subtitle">专业级开源情报收集与分析平台</p>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator"></div>
+                    <span>系统状态: 在线</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>安全连接: 已加密</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-database"></i>
+                    <span>数据源: 12 个可用</span>
+                </div>
+            </div>
         </div>
 
-        <div class="content">
-            <div class="api-endpoint">
-                <h3>🔍 PDRM Check</h3>
-                <code>curl "http://localhost:8080/?q=0123456789"</code>
+        <div class="main-content">
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="api-title">PDRM 查询</h3>
+                </div>
+                <p class="api-description">马来西亚皇家警察数据库查询，提供人员银行账号或手机号</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?q=BANK_ACCOUNT_NUMBER_OR_PHONE_NUMBER"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
 
-            <div class="api-endpoint">
-                <h3>🪪 SSPI Identity Query</h3>
-                <code>curl "http://localhost:8080/?id=IC_NUMBER"</code>
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-id-card"></i></div>
+                    <h3 class="api-title">SSPI 身份查询</h3>
+                </div>
+                <p class="api-description">国民登记局身份信息验证系统，需提供有效身份证号码</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?id=IC_NUMBER"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
 
-            <div class="api-endpoint">
-                <h3>⚖️ E-Court Records</h3>
-                <code>curl "http://localhost:8080/?name=NAME"</code>
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-gavel"></i></div>
+                    <h3 class="api-title">电子法庭记录</h3>
+                </div>
+                <p class="api-description">马来西亚司法机构电子法庭记录查询系统</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?name=NAME"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
 
-            <div class="api-endpoint">
-                <h3>🚨 PDRM Wanted List</h3>
-                <code>curl "http://localhost:8080/?wanted=IC_NUMBER"</code>
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h3 class="api-title">PDRM 通缉名单</h3>
+                </div>
+                <p class="api-description">马来西亚皇家警察通缉人员数据库查询</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?id=IC_NUMBER"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
 
-            <div class="api-endpoint">
-                <h3>🏢 SSM Company Query</h3>
-                <code>curl "http://localhost:8080/?ssm=202001012345"</code>
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-building"></i></div>
+                    <h3 class="api-title">SSM 公司查询</h3>
+                </div>
+                <p class="api-description">马来西亚公司委员会商业注册信息查询</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?ssm=202001012345"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
 
-            <div class="api-endpoint">
-                <h3>🔍 Company Information</h3>
-                <code>curl "http://localhost:8080/?comp=COMPANY_NAME"</code>
+            <div class="api-panel">
+                <div class="api-header">
+                    <div class="api-icon"><i class="fas fa-info-circle"></i></div>
+                    <h3 class="api-title">公司信息查询</h3>
+                </div>
+                <p class="api-description">综合企业信息查询，提供详细公司资料</p>
+                <div class="api-endpoint">
+                    curl "http://localhost:8080/?comp=COMPANY_NAME"
+                </div>
+                <div class="api-actions">
+                    <button class="api-button copy" onclick="copyToClipboard(this)">
+                        <i class="fas fa-copy"></i> 复制命令
+                    </button>
+                    <button class="api-button" onclick="executeQuery(this)">
+                        <i class="fas fa-play"></i> 执行查询
+                    </button>
+                </div>
             </div>
-            <div class="api-endpoint">
-                <h3>🚨 PDRM Wanted List</h3>
-                <code>curl "http://localhost:8080/?wanted=IC_NUMBER"</code>
-            </div>
+        </div>
 
-            <div style="margin-top: 2rem; text-align: center;">
-                <button class="pure-button pure-button-primary" onclick="window.location.href='https://github.com/ctkqiang/MalaysianOSINT.git'">启动查询服务</button>
-            </div>
+        <div class="footer">
+            <button class="launch-button pulse" onclick="launchSystem()">
+                <i class="fas fa-rocket"></i> 启动查询服务
+            </button>
+            <p>© 2025 钟智强 版权所有</p>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 模拟终端输入效果
-            const commands = document.querySelectorAll('.command');
-            commands.forEach(cmd => {
-                const text = cmd.textContent;
-                cmd.textContent = '';
-                let i = 0;
-                const interval = setInterval(() => {
-                    if (i < text.length) {
-                        cmd.textContent += text[i];
-                        i++;
-                    } else {
-                        clearInterval(interval);
-                    }
-                }, 100);
-            });
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">命令已复制到剪贴板</span>
+    </div>
 
-            // 添加API端点的动画效果
-            const endpoints = document.querySelectorAll('.api-endpoint');
-            endpoints.forEach((endpoint, index) => {
-                endpoint.style.animation = `fadeIn 0.5s ${index * 0.2 + 1}s forwards`;
-                endpoint.style.opacity = '0';
+    <script>
+        // 复制到剪贴板功能
+        function copyToClipboard(button) {
+            const endpoint = button.closest('.api-panel').querySelector('.api-endpoint');
+            const text = endpoint.textContent.trim();
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('命令已复制到剪贴板');
+            }).catch(err => {
+                showNotification('复制失败: ' + err);
             });
+        }
+        
+        // 显示通知
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 执行查询模拟
+        function executeQuery(button) {
+            const panel = button.closest('.api-panel');
+            const apiTitle = panel.querySelector('.api-title').textContent;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 查询中...';
+            button.disabled = true;
+            
+            // 模拟查询延迟
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-check"></i> 完成';
+                showNotification(`${apiTitle} 已完成`);
+                
+                // 恢复按钮状态
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-play"></i> 执行查询';
+                    button.disabled = false;
+                }, 2000);
+            }, 2000);
+        }
+        
+        // 启动系统
+        function launchSystem() {
+            const button = document.querySelector('.launch-button');
+            button.innerHTML = '<i class="fas fa-cog fa-spin"></i> 启动中...';
+            button.classList.remove('pulse');
+            
+            showNotification('系统启动中，请稍候...');
+            
+            // 模拟启动延迟
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-check"></i> 系统已启动';
+                showNotification('OSINT 查询服务已成功启动');
+                
+                // 添加扫描动画效果到所有面板
+                document.querySelectorAll('.api-panel').forEach(panel => {
+                    panel.classList.add('pulse');
+                });
+            }, 3000);
+        }
+        
+        // Matrix背景效果
+        function setupMatrixBackground() {
+            const canvas = document.getElementById('matrixBg');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const letters = '0101010101100101011010010110111001110011011001010110101101110100011010010111011101100101011001000111001101100101011000110111001001100101011101000111001101100101011000110111001001100101011001000111001101100101';
+            const fontSize = 12;
+            const columns = canvas.width / fontSize;
+            
+            const drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.font = `${fontSize}px monospace`;
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 33);
+        }
+        
+        // 初始化
+        window.addEventListener('load', function() {
+            setupMatrixBackground();
+            
+            // 添加ASCII艺术动画
+            const asciiArt = document.getElementById('asciiArt');
+            const originalText = asciiArt.textContent;
+            asciiArt.textContent = '';
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < originalText.length) {
+                    asciiArt.textContent += originalText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 10);
+        });
+        
+        // 响应窗口调整
+        window.addEventListener('resize', function() {
+            const canvas = document.getElementById('matrixBg');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         });
     </script>
 </body>
