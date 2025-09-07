@@ -553,7 +553,6 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
-
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
     struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);

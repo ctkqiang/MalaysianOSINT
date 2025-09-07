@@ -355,35 +355,74 @@ Instagram: https://instagram.com/username
 
 ```plaintext
 .
-├── src/
-│   ├── my_osint.c     # 主入口
-│   ├── pdrm.c         # Semak Mule 查询逻辑
-│   ├── sspi.c         # SSPI 查询逻辑
-│   ├── ecourt.c       # 法庭记录查询逻辑
-│   └── ...
-├── include/           # 头文件
-├── test/              # 单元测试
-├── CMakeLists.txt
-└── README.md
+├── src/                      # 源代码目录
+│   ├── main.c                # 主程序入口
+│   ├── http.c                # HTTP服务器实现
+│   ├── logger.c              # 日志记录模块
+│   └── query/                # 查询模块目录
+│       ├── pdrm.c           # PDRM反钱驴查询
+│       ├── sspi.c           # 移民局身份查询
+│       ├── mykad.c          # MyKad信息查询
+│       ├── ecourt.c         # 法庭记录查询
+│       ├── wanted.c         # 通缉犯查询
+│       ├── sprm.c           # 反贪污记录查询
+│       ├── ssm.c            # 公司注册查询
+│       ├── company.c        # 公司信息搜索
+│       └── social.c         # 社交媒体搜索
+├── include/                  # 头文件目录
+│   ├── osint.h              # 主头文件
+│   ├── http.h               # HTTP相关定义
+│   ├── logger.h             # 日志相关定义
+│   └── query/               # 查询模块头文件
+│       └── *.h              # 各查询模块头文件
+├── tests/                    # 测试目录
+│   ├── test_http.c          # HTTP测试
+│   ├── test_logger.c        # 日志测试
+│   └── test_query.c         # 查询模块测试
+├── docs/                     # 文档目录
+│   └── api.md               # API文档
+├── scripts/                  # 脚本目录
+│   └── install_deps.sh      # 依赖安装脚本
+└── logs/                     # 日志目录
+    └── access.log           # 访问日志
 ```
 
-### 编译单元测试
+### 开发规范
+
+1. 代码风格
+   - 使用4空格缩进
+   - 函数名使用小写字母和下划线
+   - 常量使用大写字母和下划线
+   - 每行不超过80个字符
+
+2. 提交规范
+   - 提交信息使用中文
+   - 格式：`[模块] 修改内容`
+   - 例如：`[查询] 新增社交媒体搜索功能`
+
+3. 文档规范
+   - 新功能必须更新 README.md
+   - 新接口必须更新 API 文档
+   - 注释使用中文
+
+### 编译和测试
 
 ```bash
-gcc -Wall -I./include \
-    -o test/test_osint test/test_osint.c src/pdrm.c src/sspi.c src/ecourt.c \
-    -lmicrohttpd -lcjson -lcurl
-```
+# 编译项目
+make run
 
----
+# 运行所有测试
+make test
+
+```
 
 ## 贡献指南
 
-* 提交 Pull Request 前请运行 `clang-format` 保持代码风格一致
-* Issue 请附上日志和复现步骤
-* 欢迎安全研究员、执法部门和政府单位合作
-
----
+1. Fork 项目到自己的账号
+2. 创建功能分支：`git checkout -b feature/xxx`
+3. 提交改动：`git commit -am '[xxx] 添加xxx功能'`
+4. 推送分支：`git push origin feature/xxx`
+5. 提交 Pull Request
 
 ## 许可证
 
@@ -393,11 +432,16 @@ gcc -Wall -I./include \
 * 禁止未授权的生产部署
 * 允许学术与研究用途
 
----
-
 ## 联系方式
 
-作者：钟智强
-📧 邮箱：[johnmelodymel@qq.com](mailto:johnmelodymel@qq.com)
-💬 微信：ctkqiang
+- 作者：钟智强
+- 邮箱：johnmelodymel@qq.com
+- GitHub：@ctkqiang
+- 微信：ctkqiang
+
+## 致谢
+- 马来西亚皇家警察总部 (PDRM)
+- 马来西亚反贪污委员会 (SPRM)
+- 马来西亚公司注册局 (SSM)
+- 马来西亚移民局
 
