@@ -18,7 +18,7 @@
  * ⚠️ 本工具仅供教育、研究与安全用途，请勿用于非法活动。
  *
  * @author  钟智强
- * @version v0.1.1
+ * @version v0.1.2
  */
 
 #include <stdio.h>
@@ -40,6 +40,7 @@
 #include "./include/rmp_wanted.h"
 #include "./include/memory.h"
 #include "./include/ecourt.h"
+#include "./include/bnm.h"
 
 #define PORT 8080
 
@@ -605,7 +606,7 @@ int main(int argc, char **argv) {
         BOLD BLUE "██║╚██╔╝██║  ╚██╔╝  ██║   ██║╚════██║██║██║╚██╗██║   ██║   " RESET,
         BOLD BLUE "██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║██║██║ ╚████║   ██║   " RESET,
         BOLD BLUE "╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   " RESET,
-        BOLD GREEN "🟢 马来西亚 OSINT 半自动查询系统" RESET,
+        BOLD GREEN "马来西亚 OSINT 情报系统" RESET,
         CYAN "==================================================" RESET,
         BOLD GREEN "           Malaysian OSINT Query System" RESET,
         CYAN "==================================================" RESET,

@@ -40,6 +40,7 @@ set(SOURCES
     src/sprm.c
     src/company.c
     src/social.c
+    src/bnm.c
     my_osint.c
 )
 
