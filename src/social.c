@@ -188,6 +188,14 @@ SocialTarget targets[] = {
     {"Vimeo", "https://vimeo.com/%s"},
     {"WordPress", "https://%s.wordpress.com"},
     {"GitLab", "https://gitlab.com/%s"},
+    {"Google Developers", "https://developers.google.com/profile/u/%s"},
+
+    // NSFW 
+    {"PornHub", "https://www.pornhub.com/users/%s"},
+    {"XVideos", "https://www.xvideos.com/%s"},
+    {"TwentyFourSeven", "https://www.24h.com.vn/%s"},
+    {"91Porn", "https://www.91porn.com/%s"},
+    {"Hentai", "https://www.hentai.com/%s"},
     
     // Russia
     {"VK", "https://vk.com/%s"},
