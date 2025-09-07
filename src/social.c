@@ -17,7 +17,7 @@
  * @param ptr 指向接收到的数据的指针
  * @param size 每个数据元素的大小（字节数）
  * @param nmemb 数据元素的数量
- * @param userdata 指向用户数据的指针，这里应该是semak_mule_response结构体
+ * @param userdata 指向用户数据的指针，这里应 该是semak_mule_response结构体
  * 
  * @return 返回实际处理的数据大小（字节数），如果处理失败返回0
  */

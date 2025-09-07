@@ -108,7 +108,7 @@ static enum MHD_Result handle_request(
         } else if (sa->sa_family == AF_INET6) {
             inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr), client_ip, sizeof(client_ip));
         } else {
-            snprintf(client_ip, sizeof(client_ip), "未知地址族");
+            snprintf(client_ip, sizeof(client_ip), "localhost");
         }
     }
 
@@ -433,62 +433,100 @@ static enum MHD_Result handle_request(
     }
 
     if (comp) {
-        char result_buf[8192];
+        char result_buf[16384];
+        size_t offset = 0;
 
         struct company_entry *companies = NULL;
-        
-        size_t offset = 0;
         size_t company_count = 0;
 
+
+        // 咱们在这先跑公司搜索....
         int ok = company_search(comp, &companies, &company_count);
 
         if (ok != 0 || company_count == 0) {
-            snprintf(result_buf, sizeof(result_buf), "Company search failed or no results for: %s\n", comp);
+            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "Company search failed or no results for: %s\n", comp);
+        } else {
+            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "Company Search Results for: %s\n[\n", comp);
 
-            struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
-                strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
-            );
-            enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, mhd_resp);
-
-            MHD_destroy_response(mhd_resp);
-
-            if (companies) company_free_results(companies, company_count);
-            return ret;
+            for (size_t i = 0; i < company_count; i++) {
+                offset += snprintf(result_buf + offset, sizeof(result_buf) - offset,
+                    "  {\n"
+                    "    \"name\": \"%s\",\n"
+                    "    \"category\": \"%s\",\n"
+                    "    \"address\": \"%s\",\n"
+                    "    \"website\": \"%s\",\n"
+                    "    \"source\": \"%s\"\n"
+                    "  }%s\n",
+                    companies[i].name,
+                    companies[i].category,
+                    companies[i].address,
+                    companies[i].website,
+                    companies[i].source,
+                    (i < company_count - 1) ? "," : ""
+                );
+            }
+            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "]\n");
         }
 
-        offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "Company Search Results for: %s\n[\n", comp);
+        if (companies) company_free_results(companies, company_count);
 
-        for (size_t i = 0; i < company_count; i++) {
-            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset,
-                "  {\n"
-                "    \"name\": \"%s\",\n"
-                "    \"category\": \"%s\",\n"
-                "    \"address\": \"%s\",\n"
-                "    \"website\": \"%s\",\n"
-                "    \"source\": \"%s\"\n"
-                "  }%s\n",
-                companies[i].name,
-                companies[i].category,
-                companies[i].address,
-                companies[i].website,
-                companies[i].source,
-                (i < company_count - 1) ? "," : ""
-            );
+        // 然后咱们～再跑 Semak Mule 查询， 
+        // 看看这家公式是否有任何报告
+        char payload[512];
+        snprintf(payload, sizeof(payload),
+                "{\"data\":{\"category\":\"telefon\",\"bankAccount\":\"%s\","
+                "\"telNo\":\"%s\",\"companyName\":\"\",\"captcha\":\"\"}}",
+                comp, comp);
+
+        struct semak_mule_response resp;
+        int sm_ok = pdrm_semak_mule("https://semakmule.rmp.gov.my/api/mule/get_search_data.php", payload, &resp);
+
+        if (sm_ok != 0) {
+            // 这不应该触碰到
+            offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "\nSemak Mule request failed for: %s\n", comp);
+        } else {
+            cJSON *root = cJSON_Parse(resp.data);
+            if (!root) {
+                offset += snprintf(result_buf + offset, sizeof(result_buf) - offset, "\nFailed to parse Semak Mule JSON response\n");
+            } else {
+                int count = cJSON_GetObjectItem(root, "count") -> valueint;
+                int reported = 0;
+
+                cJSON *table_data = cJSON_GetObjectItem(root, "table_data");
+
+                if (cJSON_IsArray(table_data) && cJSON_GetArraySize(table_data) > 0) {
+                    cJSON *row = cJSON_GetArrayItem(table_data, 0);
+                
+                    if (cJSON_IsArray(row) && cJSON_GetArraySize(row) > 1) {
+                        reported = cJSON_GetArrayItem(row, 1) -> valueint;
+                    }
+                }
+
+                char *pretty = cJSON_Print(root);
+                offset += snprintf(result_buf + offset, sizeof(result_buf) - offset,
+                                "\n📡 Semak Mule Response:\n\n%s\n\n"
+                                "📊 Explanation:\nThe number %s has been searched %d times.\n"
+                                "There are %d cases reported to PDRM.\n",
+                                pretty, comp, count, reported);
+
+                free(pretty);
+                cJSON_Delete(root);
+            }
+
+            pdrm_semak_mule_response_free(&resp);
         }
 
-        snprintf(result_buf + offset, sizeof(result_buf) - offset, "]\n");
-
+        // 之后 咱们再一次性返回
         struct MHD_Response *mhd_resp = MHD_create_response_from_buffer(
             strlen(result_buf), (void*)result_buf, MHD_RESPMEM_MUST_COPY
         );
 
         enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_resp);
-
         MHD_destroy_response(mhd_resp);
-        company_free_results(companies, company_count);
 
         return ret;
     }
+
 
     if (social) {
         init_curl();
@@ -514,7 +552,6 @@ static enum MHD_Result handle_request(
 
         return ret;
     }
-
 
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
@@ -549,6 +586,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "[错误] 无法启动 API 服务器，请检查端口 %d 是否被占用。\n", PORT);
         return EXIT_FAILURE;
     }
+
 
     const char *banner_lines[] = {
         "\n",
