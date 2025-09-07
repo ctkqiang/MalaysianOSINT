@@ -51,7 +51,12 @@
         "company.h": "c",
         "stdio.h": "c",
         "social.h": "c",
-        "util.h": "c"
+        "util.h": "c",
+        "bitset": "cpp",
+        "new": "cpp",
+        "utility": "cpp",
+        "bnm.h": "c",
+        "rmp_wanted.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
