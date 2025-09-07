@@ -135,8 +135,6 @@ static enum MHD_Result handle_request(
         "IP: \033[1;31m%s\033[0m\n",
         timebuf, method, full_url, client_ip);
 
-
-
     if (strcmp(method, "GET") != 0) {
         const char *msg = "Only GET supported\n";
         struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
