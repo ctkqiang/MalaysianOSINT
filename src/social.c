@@ -168,7 +168,6 @@ int check_username(const SocialTarget *target, const char *username) {
 
 SocialTarget targets[] = {
     // Global / previously added
-    {"GitHub", "https://github.com/%s"},
     {"X", "https://x.com/%s"},
     {"Reddit", "https://www.reddit.com/user/%s"},
     {"Instagram", "https://www.instagram.com/%s"},
@@ -187,8 +186,22 @@ SocialTarget targets[] = {
     {"Steam", "https://steamcommunity.com/id/%s"},
     {"Vimeo", "https://vimeo.com/%s"},
     {"WordPress", "https://%s.wordpress.com"},
+
+    // DEV
     {"GitLab", "https://gitlab.com/%s"},
+    {"GitHub", "https://github.com/%s"},
+    {"Gitcode", "https://gitcode.com/%s"},
     {"Google Developers", "https://developers.google.com/profile/u/%s"},
+    {"Stack Overflow", "https://stackoverflow.com/users/%s"},
+    {"Rust Forum", "https://users.rust-lang.org/u/%s/summary"},
+    {"HackerNews", "https://news.ycombinator.com/user?id=%s"},
+    {"Eixir Forum", "https://elixirforum.com/u/%s/summary"},
+    {"Go Forum", "https://forum.golangbridge.org/u/%s/summary"},
+    {"FreeBSD Forum", "https://forums.freebsd.org/members/%s/"},
+    {"Dev.to", "https://dev.to/%s"},
+    {"Raspberry PI forum", "https://forums.raspberrypi.com/memberlist.php?mode=viewprofile&u=%s"},
+    {"Janus Meetecho Forum", "https://janus.discourse.group/u/%s/summary"},
+    {"Jitsi Forum", "https://forum.jitsi.group/u/%s/summary"},
 
     // NSFW 
     {"PornHub", "https://www.pornhub.com/users/%s"},
@@ -232,6 +245,7 @@ SocialTarget targets[] = {
     {"Viber", "https://viber.com/%s"},
     {"Skype", "https://join.skype.com/invite/%s"},
     {"Zoom", "https://zoom.us/profile/%s"},
+    {"Lowyat Forum", "https://forum.lowyat.net/index.php?showuser=%s"},
     {"Microsoft Teams", "https://teams.microsoft.com/profile/%s"},
     {"Slack", "https://%s.slack.com"},
     {"Mastodon", "https://mastodon.social/@%s"},
