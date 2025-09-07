@@ -97,6 +97,7 @@ static enum MHD_Result handle_request(
     char *ssm = get_param(connection, "ssm");
     char *comp = get_param(connection, "comp");
     char *social = get_param(connection, "social");
+    char *bnm = get_param(connection, "bnm");
     
     char client_ip[INET6_ADDRSTRLEN] = {0};
     const union MHD_ConnectionInfo *conn_info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
@@ -145,7 +146,7 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
-    if (!q && !id && !name && !comp  && !social) {
+    if (!q && !id && !name && !comp  && !social && !bnm) {
         const char *msg = "Missing parameter. Use either:\n"
                     "  ?q=PHONE_OR_BANK\n"
                     "  ?id=IC_NUMBER\n"
@@ -153,7 +154,8 @@ static enum MHD_Result handle_request(
                     "  ?ssm=SSM_NUMBER\n"
                     "  ?wanted=IC_NUMBER\n"
                     "  ?comp=COMPANY_NAME\n"
-                    "  ?social=USERNAME\n";
+                    "  ?social=USERNAME\n"
+                    "  ?bnm=COMPANY_NAME\n";
 
 
         struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
@@ -563,6 +565,38 @@ static enum MHD_Result handle_request(
         return ret;
     }
 
+    if (bnm) {
+        BNMAlertEntry *list = NULL;
+        size_t n = 0;
+
+        int ok = bnm_fetch_alerts(&list, &n);
+        char buf[16384]; size_t off = 0;
+
+        if (ok != 0) {
+            off += snprintf(buf + off, sizeof(buf)-off, "🚨 BNM抓取失败\n");
+        } else {
+            off += snprintf(buf + off, sizeof(buf)-off, "BNM FCA List（%zu 条）：\n[\n", n);
+            
+            for (size_t i = 0; i < n; i++) {
+                off += snprintf(buf + off, sizeof(buf)-off,
+                    " {\"name\":\"%s\",\"website\":\"%s\"}%s\n",
+                    list[i].name, list[i].website,
+                    (i < n - 1) ? "," : "");
+            }
+
+            off += snprintf(buf + off, sizeof(buf)-off, "]\n");
+        }
+
+        struct MHD_Response *r = MHD_create_response_from_buffer(off, buf, MHD_RESPMEM_MUST_COPY);
+        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, r);
+
+        MHD_destroy_response(r);
+        bnm_free_alerts(list, n);
+
+        return ret;
+    }
+
+
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
     const char *msg = "Unhandled request\n";
     struct MHD_Response *resp = MHD_create_response_from_buffer(strlen(msg), (void*)msg, MHD_RESPMEM_PERSISTENT);
@@ -638,6 +672,7 @@ int main(int argc, char **argv) {
         {"5. 公司注册资料查询 (SSM)", "http://localhost:%d/?ssm=202001012345"},
         {"6. 黄页公司信息查询 (Company Yellow Page)", "http://localhost:%d/?comp=公司名称关键词"},
         {"7. 社交媒体用户名查询 (Sherlock-style)", "http://localhost:%d/?social=用户名"},
+        { "8. BNM Consumer Alert List 查询", "http://localhost:%d/?bnm={1}或公司名称关键词" }
     };
 
     for (int i = 0; i < sizeof(endpoints)/sizeof(endpoints[0]); i++) {

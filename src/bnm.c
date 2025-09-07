@@ -73,14 +73,14 @@ int bnm_fetch_alerts(BNMAlertEntry **entries, size_t *count) {
             if ((text = strstr(hq + 1, ">"))) {
                 text = strdup(text + 1);
                 char *te = strchr(text, '<');
+
                 if (te) *te = 0;
             }
         }
     
-        // 保存
         (*entries)[*count].website = href ? strdup(href) : strdup("");
         (*entries)[*count].name = text ? text : strdup("");
-        (*entries)[*count].date = strdup("");  // 简化处理
+        (*entries)[*count].date = strdup("");  // ........简化处理
         (*count)++;
     
         free(fragment);
@@ -96,4 +96,14 @@ int bnm_fetch_alerts(BNMAlertEntry **entries, size_t *count) {
     free(b.data);
     
     return 0;
+}
+
+void bnm_free_alerts(BNMAlertEntry *entries, size_t count) {
+    for (size_t i = 0; i < count; i++) {
+        free(entries[i].name);
+        free(entries[i].website);
+        free(entries[i].date);
+    }
+    
+    free(entries);
 }
