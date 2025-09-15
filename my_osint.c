@@ -573,28 +573,40 @@ static enum MHD_Result handle_request(
         char buf[16384]; size_t off = 0;
 
         if (ok != 0) {
-            off += snprintf(buf + off, sizeof(buf)-off, "🚨 BNM抓取失败\n");
+            off += snprintf(buf + off, sizeof(buf) - off,
+                            "{\"error\": \"BNM fetch failed\"}\n");
         } else {
-            off += snprintf(buf + off, sizeof(buf)-off, "BNM FCA List（%zu 条）：\n[\n", n);
-            
+            off += snprintf(buf + off, sizeof(buf) - off,
+                            "{\"count\": %zu, \"entries\": [\n", n);
+
             for (size_t i = 0; i < n; i++) {
-                off += snprintf(buf + off, sizeof(buf)-off,
-                    " {\"name\":\"%s\",\"website\":\"%s\"}%s\n",
-                    list[i].name, list[i].website,
-                    (i < n - 1) ? "," : "");
+                off += snprintf(buf + off, sizeof(buf) - off,
+                                "  {\"name\": \"%s\", \"website\": \"%s\"}%s\n",
+                                list[i].name ? list[i].name : "",
+                                list[i].website ? list[i].website : "",
+                                (i < n - 1) ? "," : "");
+                
+                if (off >= sizeof(buf)) break; 
             }
 
-            off += snprintf(buf + off, sizeof(buf)-off, "]\n");
+            off += snprintf(buf + off, sizeof(buf) - off, "]}\n");
         }
 
         struct MHD_Response *r = MHD_create_response_from_buffer(off, buf, MHD_RESPMEM_MUST_COPY);
-        enum MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, r);
+        MHD_add_response_header(r, "Content-Type", "application/json; charset=utf-8");
+
+        enum MHD_Result ret = MHD_queue_response(
+            connection,
+            ok == 0 ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR,
+            r
+        );
 
         MHD_destroy_response(r);
         bnm_free_alerts(list, n);
 
         return ret;
     }
+
 
 
     // 理论上不会到这里, 但是以防万一, 还是返回 400， 嘻嘻
